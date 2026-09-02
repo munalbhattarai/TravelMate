@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import TravelPreference, Profile
+from .services import register_user
+
 User = get_user_model()
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -19,7 +21,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
-        return User.objects.create_user(**validated_data)
+        return register_user(**validated_data)
     
 class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
@@ -43,7 +45,11 @@ class ProfileSerializer(serializers.ModelSerializer):
             "average_rating",
             "trips_completed",
         )
-
+        read_only_fields = (
+            "verification_status",
+            "average_rating",
+            "trips_completed",
+        )
 
 class TravelPreferenceSerializer(serializers.ModelSerializer):
     class Meta:
@@ -62,8 +68,8 @@ class TravelPreferenceSerializer(serializers.ModelSerializer):
 
 
 class MeSerializer(serializers.ModelSerializer):
-    profile = ProfileSerializer(read_only=True)
-    travel_preference = TravelPreferenceSerializer(read_only=True)
+    profile = ProfileSerializer()
+    travel_preference = TravelPreferenceSerializer()
 
     class Meta:
         model = User
@@ -80,3 +86,31 @@ class MeSerializer(serializers.ModelSerializer):
             "username",
             "role",
         )
+
+    def update(self, instance, validated_data):
+        profile_data = validated_data.pop("profile", {})
+        preference_data = validated_data.pop("travel_preference", {})
+
+        # Update User
+        for field, value in validated_data.items():
+            setattr(instance, field, value)
+
+        instance.save()
+
+        # Update Profile
+        profile = instance.profile
+
+        for field, value in profile_data.items():
+            setattr(profile, field, value)
+
+        profile.save()
+
+        # Update Travel Preferences
+        preference = instance.travel_preference
+
+        for field, value in preference_data.items():
+            setattr(preference, field, value)
+
+        preference.save()
+
+        return instance
