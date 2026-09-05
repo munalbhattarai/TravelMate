@@ -3,7 +3,7 @@ from .models import Profile, TravelPreference, User
 
 @transaction.atomic
 def register_user(*, username , email, password):
-    user = user.objects.create_user(
+    user = User.objects.create_user(
         username = username,
         email = email,
         password = password,
