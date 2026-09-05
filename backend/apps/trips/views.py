@@ -7,8 +7,8 @@ from rest_framework import (
     status,
     viewsets,
 )
-from .serializers import TripMembershipSerializer, TripSerializer
-from .models import Trip
+from .serializers import TripMembershipSerializer, TripSerializer, ItinerarySerializer
+from .models import Trip, Itinerary
 
 
 class TripViewSet(viewsets.ModelViewSet):
@@ -43,3 +43,17 @@ class TripViewSet(viewsets.ModelViewSet):
             TripMembershipSerializer(membership).data,
             status=status.HTTP_201_CREATED,
         )
+
+
+class ItineraryViewSet(viewsets.ModelViewSet):
+    serializer_class = ItinerarySerializer
+    permission_classes = [permissions.IsAuthenticated]
+    ordering = ["day_number"]
+
+    def get_queryset(self):
+        return Itinerary.objects.filter(
+            trip_id=self.kwargs["trip_pk"]
+        )
+
+    def perform_create(self, serializer):
+        serializer.save(trip_id=self.kwargs["trip_pk"])

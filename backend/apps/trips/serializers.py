@@ -1,4 +1,4 @@
-from .models import Trip, TripMembership
+from .models import Trip, TripMembership, Itinerary
 from rest_framework import serializers
 
 class TripSerializer(serializers.ModelSerializer):
@@ -54,3 +54,18 @@ class TripMembershipSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         )
+
+class ItinerarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Itinerary
+        fields = (
+            "id",
+            "trip",
+            "day_number",
+            "title",
+            "description",
+            "activities",
+            "accommodation",
+            "notes",
+        )
+        read_only_fields = ("id",)
