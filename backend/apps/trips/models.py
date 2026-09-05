@@ -94,3 +94,23 @@ class TripMembership(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.trip.title} ({self.status})"
+
+class Itinerary(models.Model):
+    trip = models.ForeignKey(
+        Trip,
+        on_delete=models.CASCADE,
+        related_name="itineraries",
+    )
+    day_number = models.PositiveIntegerField()
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    activities = models.JSONField(default=list, blank=True)
+    accommodation = models.CharField(max_length=200, blank=True)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["trip", "day_number"]
+        unique_together = ("trip", "day_number")
+
+    def __str__(self):
+        return f"Day {self.day_number} - {self.trip.title}"
