@@ -7,11 +7,19 @@ from rest_framework import (
     status,
     viewsets,
 )
+from .services import (
+    accept_membership,
+    create_trip,
+    reject_membership,
+    request_to_join,
+)
+from rest_framework.views import APIView
 from .serializers import TripMembershipSerializer, TripSerializer, ItinerarySerializer
-from .models import Trip, Itinerary
+from .models import Trip, Itinerary, TripMembership
 
 
 class TripViewSet(viewsets.ModelViewSet):
+    
     queryset = Trip.objects.all()
     serializer_class = TripSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -24,24 +32,27 @@ class TripViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(creator=self.request.user)
 
-    @action(detail=True, methods=["post"])
-    def join(self, request, pk=None):
+    @action(
+    detail=True,
+    methods=["get"],
+    url_path="memberships",
+)
+    def memberships(self, request, pk=None):
         trip = self.get_object()
 
-        try:
-            membership = request_to_join(
-                trip=trip,
-                user=request.user,
-            )
-        except ValueError as exc:
+        if trip.creator != request.user:
             return Response(
-                {"detail": str(exc)},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"detail": "Only the trip creator can view membership requests."},
+                status=status.HTTP_403_FORBIDDEN,
             )
 
+        memberships = TripMembership.objects.filter(
+            trip=trip
+        ).select_related("user", "user__profile")
+
         return Response(
-            TripMembershipSerializer(membership).data,
-            status=status.HTTP_201_CREATED,
+            TripMembershipSerializer(memberships, many=True).data,
+            status=status.HTTP_200_OK,
         )
 
 
@@ -57,3 +68,59 @@ class ItineraryViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(trip_id=self.kwargs["trip_pk"])
+        
+class AcceptMembershipView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, membership_id):
+        try:
+            membership = TripMembership.objects.get(pk=membership_id)
+        except TripMembership.DoesNotExist:
+            return Response(
+                {"detail": "Membership request not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            membership = accept_membership(
+                membership=membership,
+                accepted_by=request.user,
+            )
+        except ValueError as exc:
+            return Response(
+                {"detail": str(exc)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+            TripMembershipSerializer(membership).data,
+            status=status.HTTP_200_OK,
+        )
+        
+class RejectMembershipView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, membership_id):
+        try:
+            membership = TripMembership.objects.get(pk=membership_id)
+        except TripMembership.DoesNotExist:
+            return Response(
+                {"detail": "Membership request not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            membership = reject_membership(
+                membership=membership,
+                rejected_by=request.user,
+            )
+        except ValueError as exc:
+            return Response(
+                {"detail": str(exc)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+            TripMembershipSerializer(membership).data,
+            status=status.HTTP_200_OK,
+        )
