@@ -29,6 +29,11 @@ class Trip(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
 
+    travel_style = models.CharField(
+        max_length=30,
+        blank=True,
+    )
+
     budget = models.DecimalField(
         max_digits=10,
         decimal_places=2,
