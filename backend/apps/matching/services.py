@@ -66,4 +66,19 @@ def calculate_interest_score(*, user, trip):
         len(matched_interests) / len(user_set)
     ) * 100
 
-    return round(match_percentage)
+    return round(match_percentage)
+
+def calculate_travel_style_score(*, user, trip):
+    preferred_styles = user.travel_preference.travel_styles
+    trip_style = trip.travel_style
+
+    if not preferred_styles or not trip_style:
+        return 0
+
+    preferred = {
+        str(style).strip().lower()
+        for style in preferred_styles
+    }
+
+    return 100 if trip_style.strip().lower() in preferred else 0
+
