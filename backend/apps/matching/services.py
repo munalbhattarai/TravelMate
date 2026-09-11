@@ -39,3 +39,31 @@ def calculate_budget_score(*, user, trip):
         return 20
 
     return 0
+
+def calculate_interest_score(*, user, trip):
+    user_interests = user.travel_preference.interests
+    trip_activities = trip.destination.activities
+
+    if not user_interests or not trip_activities:
+        return 0
+
+    user_set = {
+        str(item).strip().lower()
+        for item in user_interests
+    }
+
+    activity_set = {
+        str(item).strip().lower()
+        for item in trip_activities
+    }
+
+    matched_interests = user_set.intersection(activity_set)
+
+    if not matched_interests:
+        return 0
+
+    match_percentage = (
+        len(matched_interests) / len(user_set)
+    ) * 100
+
+    return round(match_percentage)
