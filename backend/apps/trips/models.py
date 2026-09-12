@@ -34,6 +34,11 @@ class Trip(models.Model):
         blank=True,
     )
 
+    transport = models.CharField(
+        max_length=30,
+        blank=True,
+    )
+
     budget = models.DecimalField(
         max_digits=10,
         decimal_places=2,
