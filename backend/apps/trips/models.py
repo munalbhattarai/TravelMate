@@ -45,7 +45,10 @@ class Trip(models.Model):
     )
 
     max_members = models.PositiveIntegerField(default=2)
-
+    accommodation = models.CharField(
+    max_length=30,
+    blank=True,
+    )
     status = models.CharField(
         max_length=20,
         choices=Status.choices,

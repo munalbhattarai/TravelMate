@@ -18,6 +18,7 @@ class TripSerializer(serializers.ModelSerializer):
             "end_date",
             "travel_style",
             "transport",
+            "accommodation",
             "budget",
             "max_members",
             "status",
