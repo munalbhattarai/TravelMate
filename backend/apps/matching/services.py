@@ -81,4 +81,17 @@ def calculate_travel_style_score(*, user, trip):
     }
 
     return 100 if trip_style.strip().lower() in preferred else 0
-
+
+def calculate_transport_score(*, user, trip):
+    preferred_transport = user.travel_preference.preferred_transport
+    trip_transport = trip.transport
+
+    if not preferred_transport or not trip_transport:
+        return 0
+
+    return (
+        100
+        if preferred_transport.strip().lower()
+        == trip_transport.strip().lower()
+        else 0
+    )
