@@ -111,3 +111,102 @@ def calculate_accommodation_score(*, user, trip):
         == trip_accommodation.strip().lower()
         else 0
     )
+
+def calculate_destination_score(*, user, trip):
+    preferred_destinations = user.travel_preference.preferred_destinations
+    if not preferred_destinations or not trip.destination:
+        return 0
+
+    preferred = {
+        str(dest).strip().lower()
+        for dest in preferred_destinations
+    }
+
+    dest_name = str(trip.destination.name).strip().lower()
+    dest_id = str(trip.destination.id)
+
+    return 100 if (dest_name in preferred or dest_id in preferred) else 0
+
+def calculate_date_score(*, user, trip):
+    preferred_duration = user.travel_preference.preferred_duration_days
+    if not preferred_duration or not trip.start_date or not trip.end_date:
+        return 0
+
+    trip_duration = (trip.end_date - trip.start_date).days
+    difference = abs(trip_duration - preferred_duration)
+
+    if difference == 0:
+        return 100
+    if difference <= 1:
+        return 80
+    if difference <= 2:
+        return 60
+    if difference <= 3:
+        return 40
+    if difference <= 5:
+        return 20
+
+    return 0
+
+def calculate_language_score(*, user, trip):
+    user_languages = user.travel_preference.languages
+    trip_languages = trip.languages
+
+    if not user_languages or not trip_languages:
+        return 0
+
+    user_set = {
+        str(item).strip().lower()
+        for item in user_languages
+    }
+
+    trip_set = {
+        str(item).strip().lower()
+        for item in trip_languages
+    }
+
+    matched_languages = user_set.intersection(trip_set)
+
+    if not matched_languages:
+        return 0
+
+    match_percentage = (
+        len(matched_languages) / len(user_set)
+    ) * 100
+
+    return round(match_percentage)
+
+MATCHING_WEIGHTS = {
+    "destination": 25,
+    "dates": 20,
+    "budget": 15,
+    "interests": 15,
+    "travel_style": 10,
+    "transport": 5,
+    "accommodation": 5,
+    "language": 5,
+}
+
+
+def calculate_match_score(*, user, trip):
+    scores = {
+        "destination": calculate_destination_score(user=user, trip=trip),
+        "dates": calculate_date_score(user=user, trip=trip),
+        "budget": calculate_budget_score(user=user, trip=trip),
+        "interests": calculate_interest_score(user=user, trip=trip),
+        "travel_style": calculate_travel_style_score(user=user, trip=trip),
+        "transport": calculate_transport_score(user=user, trip=trip),
+        "accommodation": calculate_accommodation_score(user=user, trip=trip),
+        "language": calculate_language_score(user=user, trip=trip),
+    }
+
+    weighted_score = sum(
+        scores[factor] * MATCHING_WEIGHTS[factor] / 100
+        for factor in scores
+    )
+
+    return {
+        "score": round(weighted_score),
+        "breakdown": scores,
+        "weights": MATCHING_WEIGHTS,
+    }

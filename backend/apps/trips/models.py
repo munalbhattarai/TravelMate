@@ -38,7 +38,10 @@ class Trip(models.Model):
         max_length=30,
         blank=True,
     )
-
+    languages = models.JSONField(
+        default=list,
+        blank=True,
+    )
     budget = models.DecimalField(
         max_digits=10,
         decimal_places=2,
