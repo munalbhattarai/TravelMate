@@ -95,3 +95,19 @@ def calculate_transport_score(*, user, trip):
         == trip_transport.strip().lower()
         else 0
     )
+
+def calculate_accommodation_score(*, user, trip):
+    preferred_accommodation = (
+        user.travel_preference.preferred_accommodation
+    )
+    trip_accommodation = trip.accommodation
+
+    if not preferred_accommodation or not trip_accommodation:
+        return 0
+
+    return (
+        100
+        if preferred_accommodation.strip().lower()
+        == trip_accommodation.strip().lower()
+        else 0
+    )
