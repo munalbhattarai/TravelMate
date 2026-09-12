@@ -1,3 +1,8 @@
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+
 def calculate_budget_score(*, user, trip):
     preference = user.travel_preference
 
@@ -210,3 +215,23 @@ def calculate_match_score(*, user, trip):
         "breakdown": scores,
         "weights": MATCHING_WEIGHTS,
     }
+
+
+def match_users_for_trip(trip, requesting_user):
+    candidates = (
+        User.objects.filter(is_active=True)
+        .exclude(id=requesting_user.id)
+        .exclude(id=trip.creator_id)
+        .exclude(id__in=trip.memberships.values("user_id"))
+        .select_related("profile")
+    )
+
+    results = []
+    for candidate in candidates:
+        match_data = calculate_match_score(user=candidate, trip=trip)
+        results.append({
+            "user": candidate,
+            **match_data,
+        })
+
+    return sorted(results, key=lambda r: r["score"], reverse=True)
