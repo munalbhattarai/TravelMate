@@ -29,6 +29,40 @@ class TripViewSet(viewsets.ModelViewSet):
     ordering_fields = ["start_date", "budget", "created_at"]
     ordering = ["start_date"]
 
+    def get_queryset(self):
+        queryset = Trip.objects.select_related("creator", "destination").all()
+        params = self.request.query_params
+
+        destination = params.get("destination")
+        if destination:
+            queryset = queryset.filter(destination_id=destination)
+
+        travel_style = params.get("travel_style")
+        if travel_style:
+            queryset = queryset.filter(travel_style__iexact=travel_style)
+
+        transport = params.get("transport")
+        if transport:
+            queryset = queryset.filter(transport__iexact=transport)
+
+        accommodation = params.get("accommodation")
+        if accommodation:
+            queryset = queryset.filter(accommodation__iexact=accommodation)
+
+        min_budget = params.get("min_budget")
+        if min_budget:
+            queryset = queryset.filter(budget__gte=min_budget)
+
+        max_budget = params.get("max_budget")
+        if max_budget:
+            queryset = queryset.filter(budget__lte=max_budget)
+
+        status_param = params.get("status")
+        if status_param:
+            queryset = queryset.filter(status=status_param)
+
+        return queryset
+
     def perform_create(self, serializer):
         serializer.save(creator=self.request.user)
 
