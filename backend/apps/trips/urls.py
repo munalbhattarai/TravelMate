@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     AcceptMembershipView,
+    CancelMembershipView,
     RejectMembershipView,
     ItineraryViewSet,
     TripViewSet,
@@ -30,8 +31,13 @@ urlpatterns = router.urls + [
         name="accept-membership",
     ),
     path(
-    "memberships/<int:membership_id>/reject/",
-    RejectMembershipView.as_view(),
-    name="reject-membership",
-),
+        "memberships/<int:membership_id>/reject/",
+        RejectMembershipView.as_view(),
+        name="reject-membership",
+    ),
+    path(
+        "memberships/<int:membership_id>/cancel/",
+        CancelMembershipView.as_view(),
+        name="cancel-membership",
+    ),
 ]

@@ -9,7 +9,9 @@ from rest_framework import (
 )
 from .services import (
     accept_membership,
+    cancel_membership_request,
     create_trip,
+    leave_trip,
     reject_membership,
     request_to_join,
 )
@@ -89,6 +91,22 @@ class TripViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK,
         )
 
+    @action(detail=True, methods=["post"])
+    def leave(self, request, pk=None):
+        trip = self.get_object()
+        try:
+            leave_trip(trip=trip, user=request.user)
+        except ValueError as exc:
+            return Response(
+                {"detail": str(exc)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+            {"detail": "You have left the trip."},
+            status=status.HTTP_200_OK,
+        )
+
 
 class ItineraryViewSet(viewsets.ModelViewSet):
     serializer_class = ItinerarySerializer
@@ -156,5 +174,34 @@ class RejectMembershipView(APIView):
 
         return Response(
             TripMembershipSerializer(membership).data,
+            status=status.HTTP_200_OK,
+        )
+
+
+class CancelMembershipView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, membership_id):
+        try:
+            membership = TripMembership.objects.get(pk=membership_id)
+        except TripMembership.DoesNotExist:
+            return Response(
+                {"detail": "Membership request not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            cancel_membership_request(
+                membership=membership,
+                user=request.user,
+            )
+        except ValueError as exc:
+            return Response(
+                {"detail": str(exc)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+            {"detail": "Membership request cancelled successfully."},
             status=status.HTTP_200_OK,
         )
