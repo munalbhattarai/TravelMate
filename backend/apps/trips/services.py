@@ -138,3 +138,49 @@ def reject_membership(*, membership, rejected_by):
     membership.save(update_fields=["status", "updated_at"])
 
     return membership
+
+
+@transaction.atomic
+def cancel_membership_request(*, membership, user):
+    if membership.user_id != user.id:
+        raise ValueError("You can only cancel your own membership requests.")
+
+    membership = TripMembership.objects.select_for_update().get(pk=membership.pk)
+
+    if membership.status != TripMembership.Status.PENDING:
+        raise ValueError("Only pending requests can be cancelled.")
+
+    membership.delete()
+    return True
+
+
+@transaction.atomic
+def leave_trip(*, trip, user):
+    if trip.creator_id == user.id:
+        raise ValueError("Trip creator cannot leave their own trip.")
+
+    membership = TripMembership.objects.select_for_update().filter(
+        trip=trip,
+        user=user,
+        status=TripMembership.Status.ACCEPTED,
+    ).first()
+
+    if not membership:
+        raise ValueError("You are not an accepted member of this trip.")
+
+    trip = Trip.objects.select_for_update().get(pk=trip.pk)
+    if trip.status not in [Trip.Status.OPEN, Trip.Status.FULL]:
+        raise ValueError("Cannot leave a trip that is already in progress or completed.")
+
+    membership.delete()
+
+    accepted_count = TripMembership.objects.filter(
+        trip=trip,
+        status=TripMembership.Status.ACCEPTED,
+    ).count()
+
+    if trip.status == Trip.Status.FULL and accepted_count < trip.max_members:
+        trip.status = Trip.Status.OPEN
+        trip.save(update_fields=["status", "updated_at"])
+
+    return True
