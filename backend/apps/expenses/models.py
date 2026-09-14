@@ -40,3 +40,31 @@ class Expense(models.Model):
 
     def __str__(self):
         return f"{self.description} ({self.amount})"
+
+
+class ExpenseShare(models.Model):
+    expense = models.ForeignKey(
+        Expense,
+        on_delete=models.CASCADE,
+        related_name="shares",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="expense_shares",
+    )
+    amount_owed = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+    )
+
+    class Meta:
+        unique_together = ("expense", "user")
+        indexes = [
+            models.Index(fields=["expense"]),
+            models.Index(fields=["user"]),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} owes {self.amount_owed} for {self.expense.description}"
+
