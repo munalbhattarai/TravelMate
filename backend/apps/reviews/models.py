@@ -14,6 +14,13 @@ class Review(models.Model):
         on_delete=models.CASCADE,
         related_name="reviews_given",
     )
+    reviewed_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="reviews_received",
+        null=True,
+        blank=True,
+    )
     rating = models.PositiveIntegerField(
         validators=[
             MinValueValidator(1),
@@ -25,11 +32,12 @@ class Review(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ("trip", "reviewer")
+        unique_together = ("trip", "reviewer", "reviewed_user")
         ordering = ["-created_at"]
         indexes = [
             models.Index(fields=["trip"]),
             models.Index(fields=["reviewer"]),
+            models.Index(fields=["reviewed_user"]),
             models.Index(fields=["rating"]),
         ]
 
