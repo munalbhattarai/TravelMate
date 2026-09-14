@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'apps.trips',
     'apps.reviews',
     'apps.matching',
+    'apps.expenses',
 ]
 
 MIDDLEWARE = [
