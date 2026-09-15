@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'apps.reviews',
     'apps.matching',
     'apps.expenses',
+    'apps.moderation',
 ]
 
 MIDDLEWARE = [
