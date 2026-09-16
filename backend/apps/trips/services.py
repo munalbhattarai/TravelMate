@@ -183,4 +183,25 @@ def leave_trip(*, trip, user):
         trip.status = Trip.Status.OPEN
         trip.save(update_fields=["status", "updated_at"])
 
-    return True
+    return True
+
+
+@transaction.atomic
+def auto_transition_trips():
+    today = timezone.localdate()
+
+    started_count = Trip.objects.filter(
+        status__in=[Trip.Status.OPEN, Trip.Status.FULL],
+        start_date__lte=today,
+    ).update(status=Trip.Status.ONGOING, updated_at=timezone.now())
+
+    completed_count = Trip.objects.filter(
+        status=Trip.Status.ONGOING,
+        end_date__lt=today,
+    ).update(status=Trip.Status.COMPLETED, updated_at=timezone.now())
+
+    return {
+        "started": started_count,
+        "completed": completed_count,
+    }
+
