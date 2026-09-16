@@ -222,6 +222,8 @@ def match_users_for_trip(trip, requesting_user):
         User.objects.filter(is_active=True)
         .exclude(id=requesting_user.id)
         .exclude(id=trip.creator_id)
+        .exclude(blocked_by__blocker=requesting_user)
+        .exclude(blocking__blocked=requesting_user)
         .exclude(id__in=trip.memberships.values("user_id"))
         .select_related("profile")
     )
