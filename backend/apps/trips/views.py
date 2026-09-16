@@ -107,6 +107,58 @@ class TripViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK,
         )
 
+    @action(detail=True, methods=["post"])
+    def start(self, request, pk=None):
+        trip = self.get_object()
+        if trip.creator != request.user:
+            return Response(
+                {"detail": "Only the trip creator can start this trip."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        if trip.status not in [Trip.Status.OPEN, Trip.Status.FULL]:
+            return Response(
+                {"detail": "Only open or full trips can be started."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        trip.status = Trip.Status.ONGOING
+        trip.save(update_fields=["status", "updated_at"])
+        return Response(TripSerializer(trip).data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"])
+    def complete(self, request, pk=None):
+        trip = self.get_object()
+        if trip.creator != request.user:
+            return Response(
+                {"detail": "Only the trip creator can mark this trip completed."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        if trip.status != Trip.Status.ONGOING:
+            return Response(
+                {"detail": "Only ongoing trips can be completed."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        trip.status = Trip.Status.COMPLETED
+        trip.save(update_fields=["status", "updated_at"])
+        return Response(TripSerializer(trip).data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"])
+    def cancel(self, request, pk=None):
+        trip = self.get_object()
+        if trip.creator != request.user:
+            return Response(
+                {"detail": "Only the trip creator can cancel this trip."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        if trip.status in [Trip.Status.COMPLETED, Trip.Status.CANCELLED]:
+            return Response(
+                {"detail": "Cannot cancel a completed or already cancelled trip."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        trip.status = Trip.Status.CANCELLED
+        trip.save(update_fields=["status", "updated_at"])
+        return Response(TripSerializer(trip).data, status=status.HTTP_200_OK)
+
+
 
 class ItineraryViewSet(viewsets.ModelViewSet):
     serializer_class = ItinerarySerializer
