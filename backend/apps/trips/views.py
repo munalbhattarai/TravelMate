@@ -17,6 +17,7 @@ from .services import (
 )
 from rest_framework.views import APIView
 from .serializers import TripMembershipSerializer, TripSerializer, ItinerarySerializer
+from common.permissions import IsTripCreator, IsTripMember, IsOwnerOrReadOnly
 from .models import Trip, Itinerary, TripMembership
 
 
@@ -25,6 +26,18 @@ class TripViewSet(viewsets.ModelViewSet):
     queryset = Trip.objects.all()
     serializer_class = TripSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_permissions(self):
+        if self.action in [
+            "update",
+            "partial_update",
+            "destroy",
+            "start",
+            "complete",
+            "cancel",
+        ]:
+            return [permissions.IsAuthenticated(), IsTripCreator()]
+        return [permissions.IsAuthenticated()]
 
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["title", "description", "destination__name"]

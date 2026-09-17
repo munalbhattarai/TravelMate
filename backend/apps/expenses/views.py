@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 
+from common.permissions import IsTripMember, IsOwnerOrReadOnly
 from apps.trips.models import Trip
 from .models import Expense
 from .serializers import ExpenseSerializer, ExpenseCreateSerializer
@@ -16,6 +17,11 @@ class ExpenseViewSet(viewsets.ModelViewSet):
         .all()
     )
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_permissions(self):
+        if self.action in ["update", "partial_update", "destroy"]:
+            return [permissions.IsAuthenticated(), IsOwnerOrReadOnly()]
+        return [permissions.IsAuthenticated()]
 
     def get_serializer_class(self):
         if self.action == "create":
