@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'apps.matching',
     'apps.expenses',
     'apps.moderation',
+    'apps.chat',
 ]
 
 MIDDLEWARE = [
