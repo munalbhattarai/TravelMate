@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'apps.expenses',
     'apps.moderation',
     'apps.chat',
+    'apps.notifications',
 ]
 
 MIDDLEWARE = [
