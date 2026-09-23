@@ -1,3 +1,4 @@
+from apps.notifications.services import notify as send_notification
 from django.db import transaction
 from django.utils import timezone
 from .models import Trip, TripMembership
@@ -83,6 +84,12 @@ def accept_membership(*, membership, accepted_by):
         trip.status = Trip.Status.FULL
         trip.save(update_fields=["status", "updated_at"])
 
+    send_notification(
+        user=membership.user,
+        type="request_accepted",
+        payload={"trip_id": trip.id, "trip_title": trip.title},
+    )
+
     return membership
 
 @transaction.atomic
@@ -136,6 +143,12 @@ def reject_membership(*, membership, rejected_by):
 
     membership.status = TripMembership.Status.REJECTED
     membership.save(update_fields=["status", "updated_at"])
+
+    send_notification(
+        user=membership.user,
+        type="request_rejected",
+        payload={"trip_id": trip.id, "trip_title": trip.title},
+    )
 
     return membership
 
@@ -204,4 +217,4 @@ def auto_transition_trips():
         "started": started_count,
         "completed": completed_count,
     }
-
+
