@@ -27,6 +27,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
         review = serializer.save(reviewer=self.request.user)
         if review.reviewed_user:
             recompute_reputation(review.reviewed_user)
+            from apps.notifications.services import notify
+            notify(
+                user=review.reviewed_user,
+                type='review_received',
+                payload={'reviewer': self.request.user.username, 'trip_id': trip.id, 'rating': review.rating},
+            )
 
     def get_queryset(self):
         qs = super().get_queryset()
