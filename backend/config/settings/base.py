@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'apps.moderation',
     'apps.chat',
     'apps.notifications',
+    'apps.analytics',
 ]
 
 MIDDLEWARE = [
