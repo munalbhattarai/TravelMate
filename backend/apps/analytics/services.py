@@ -58,8 +58,31 @@ def get_platform_analytics():
         for item in Trip.objects.values("status").annotate(count=Count("id"))
     }
 
-        avg_companion_rating = 0
+    avg_companion_rating = Review.objects.aggregate(avg=Avg("rating"))["avg"] or 0
+
+    total_requests = TripMembership.objects.count()
+    accepted_requests = TripMembership.objects.filter(
+        status=TripMembership.Status.ACCEPTED
+    ).count()
+    acceptance_rate = (
+        round((accepted_requests / total_requests) * 100, 1)
+        if total_requests > 0
+        else 0
+    )
+
+    total_trips = Trip.objects.count()
+    completed_trips = Trip.objects.filter(status=Trip.Status.COMPLETED).count()
+    completion_rate = (
+        round((completed_trips / total_trips) * 100, 1)
+        if total_trips > 0
+        else 0
+    )
+
     return {
         "popular_destinations": popular_destinations,
         "trip_status_distribution": trip_status_distribution,
+        "average_companion_rating": round(float(avg_companion_rating), 2),
+        "acceptance_rate_percentage": acceptance_rate,
+        "completion_rate_percentage": completion_rate,
+        "total_membership_requests": total_requests,
     }
