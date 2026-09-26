@@ -35,3 +35,31 @@ def get_dashboard_summary():
         "pending_reports": pending_reports,
         "pending_verifications": pending_verifications,
     }
+
+
+def get_platform_analytics():
+    from django.db.models import Avg, Count
+    from apps.reviews.models import Review
+    from apps.trips.models import TripMembership
+
+    popular_destinations = [
+        {
+            "destination": item["destination__name"],
+            "trip_count": item["trip_count"],
+        }
+        for item in Trip.objects.filter(destination__isnull=False)
+        .values("destination__name")
+        .annotate(trip_count=Count("id"))
+        .order_by("-trip_count")[:5]
+    ]
+
+    trip_status_distribution = {
+        item["status"]: item["count"]
+        for item in Trip.objects.values("status").annotate(count=Count("id"))
+    }
+
+        avg_companion_rating = 0
+    return {
+        "popular_destinations": popular_destinations,
+        "trip_status_distribution": trip_status_distribution,
+    }
