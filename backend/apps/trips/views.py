@@ -176,6 +176,11 @@ class TripViewSet(viewsets.ModelViewSet):
 class ItineraryViewSet(viewsets.ModelViewSet):
     serializer_class = ItinerarySerializer
     permission_classes = [permissions.IsAuthenticated]
+    def get_permissions(self):
+        if self.action in ["create", "update", "partial_update", "destroy", "reorder"]:
+            return [permissions.IsAuthenticated(), IsTripMember()]
+        return [permissions.IsAuthenticated()]
+
     ordering = ["day_number"]
 
     def get_queryset(self):
