@@ -218,3 +218,11 @@ def auto_transition_trips():
         "completed": completed_count,
     }
 
+
+def reorder_itinerary_items(*, itinerary, item_orders):
+    from .models import ItineraryItem
+    for item_data in item_orders:
+        item_id = item_data.get('id')
+        new_order = item_data.get('order', 0)
+        ItineraryItem.objects.filter(id=item_id, itinerary=itinerary).update(order=new_order)
+    return itinerary.items.all().order_by('order')
