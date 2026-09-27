@@ -49,8 +49,8 @@ class Trip(models.Model):
 
     max_members = models.PositiveIntegerField(default=2)
     accommodation = models.CharField(
-    max_length=30,
-    blank=True,
+        max_length=30,
+        blank=True,
     )
     status = models.CharField(
         max_length=20,
@@ -130,3 +130,25 @@ class Itinerary(models.Model):
 
     def __str__(self):
         return f"Day {self.day_number} - {self.trip.title}"
+
+
+class ItineraryItem(models.Model):
+    itinerary = models.ForeignKey(
+        Itinerary,
+        on_delete=models.CASCADE,
+        related_name="items",
+    )
+    order = models.PositiveIntegerField(default=0)
+    time = models.TimeField(null=True, blank=True)
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    location_name = models.CharField(max_length=200, blank=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["itinerary", "order", "time"]
+
+    def __str__(self):
+        return f"{self.title} (Day {self.itinerary.day_number})"
