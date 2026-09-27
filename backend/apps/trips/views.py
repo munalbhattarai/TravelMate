@@ -185,6 +185,14 @@ class ItineraryViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(trip_id=self.kwargs["trip_pk"])
+    @action(detail=True, methods=["post"])
+    def reorder(self, request, pk=None, trip_pk=None):
+        from .services import reorder_itinerary_items
+        itinerary = self.get_object()
+        item_orders = request.data.get("items", [])
+        reorder_itinerary_items(itinerary=itinerary, item_orders=item_orders)
+        return Response({"status": "items reordered successfully"})
+
         
 class AcceptMembershipView(APIView):
     permission_classes = [permissions.IsAuthenticated]
