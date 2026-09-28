@@ -174,3 +174,17 @@ SIMPLE_JWT = {
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+# Celery Configuration
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_TIMEZONE = 'Asia/Kathmandu'
+CELERY_BEAT_SCHEDULE = {
+    'daily-trip-lifecycle-transition': {
+        'task': 'apps.trips.tasks.task_auto_transition_trips',
+        'schedule': 86400.0,
+    },
+    'hourly-stale-join-request-cleanup': {
+        'task': 'apps.trips.tasks.task_expire_stale_join_requests',
+        'schedule': 3600.0,
+    },
+}
