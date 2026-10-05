@@ -18,6 +18,13 @@ class User(AbstractUser):
     
     def __str__(self):
         return self.username
+
+    @property
+    def travel_preference(self):
+        try:
+            return self.travel_prefrence
+        except Exception:
+            return None
     
 class Profile(models.Model):
     user = models.OneToOneField(
@@ -63,6 +70,22 @@ class TravelPreference(models.Model):
     )
     trevel_styles = models.JSONField(default=list, blank= True)
     interest = models.JSONField(default=list, blank=True)
+
+    @property
+    def travel_styles(self):
+        return self.trevel_styles
+
+    @travel_styles.setter
+    def travel_styles(self, value):
+        self.trevel_styles = value
+
+    @property
+    def interests(self):
+        return self.interest
+
+    @interests.setter
+    def interests(self, value):
+        self.interest = value
     
     preferred_transport = models.CharField(
         max_length=100,

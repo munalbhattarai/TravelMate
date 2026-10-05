@@ -9,13 +9,13 @@ def register_user(*, username , email, password):
         password = password,
     )
     
-    Profile.objects.create(
-        user = user,
-        display_name = username,
+    Profile.objects.get_or_create(
+        user=user,
+        defaults={"display_name": username},
     )
     
-    TravelPreference.objects.create(
-        user = user,
+    TravelPreference.objects.get_or_create(
+        user=user,
     )
     
     return user

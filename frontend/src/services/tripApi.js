@@ -32,5 +32,17 @@ export const tripApi = {
 
   async getItinerary(tripId) {
     return api.get(`/trips/${tripId}/itineraries/`);
+  },
+
+  async getMemberships(tripId) {
+    return api.get(`/trips/${tripId}/memberships/`);
+  },
+
+  async getExpenses(tripId) {
+    return api.get(`/expenses/?trip=${tripId}`);
+  },
+
+  async addExpense(data) {
+    return api.post('/expenses/', data);
   }
 };

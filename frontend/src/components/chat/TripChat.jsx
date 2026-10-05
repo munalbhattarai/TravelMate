@@ -21,7 +21,7 @@ export default function TripChat({ tripId, currentUser }) {
 
   useEffect(() => {
     loadMessages();
-    const interval = setInterval(loadMessages, 5000);
+    const interval = setInterval(loadMessages, 4000);
     return () => clearInterval(interval);
   }, [tripId]);
 
@@ -33,36 +33,57 @@ export default function TripChat({ tripId, currentUser }) {
     e.preventDefault();
     if (!newMsg.trim()) return;
 
+    const messageText = newMsg.trim();
+    setNewMsg('');
+
     try {
-      const sent = await chatApi.sendMessage(tripId, newMsg.trim());
+      const sent = await chatApi.sendMessage(tripId, messageText);
       setMessages((prev) => [...prev, sent]);
-      setNewMsg('');
     } catch (err) {
       alert(err.message || 'Failed to send message');
+      setNewMsg(messageText);
     }
   };
 
   return (
-    <div className="trip-chat-container glass-panel">
-      <div className="chat-header">
-        <h4>💬 Trip Workspace Group Chat</h4>
-        <span className="live-indicator">● Active</span>
+    <div className="trip-chat-messenger">
+      <div className="messenger-header">
+        <div className="messenger-title-group">
+          <span className="messenger-icon">💬</span>
+          <div>
+            <h4 className="messenger-title">Trip Workspace Chat</h4>
+            <span className="messenger-status">
+              <span className="live-dot" /> Live Group Channel
+            </span>
+          </div>
+        </div>
+        <span className="messenger-badge">End-to-End Logged</span>
       </div>
 
-      <div className="chat-message-list">
+      <div className="messenger-body">
         {loading ? (
-          <div className="text-center text-muted p-4">Loading messages...</div>
+          <div className="chat-empty-state">Loading conversation history...</div>
         ) : messages.length === 0 ? (
-          <div className="text-center text-muted p-4">No messages yet. Say hi to your travel group!</div>
+          <div className="chat-empty-state">
+            <span className="empty-icon">🏔️</span>
+            <p>No messages yet. Say hello and coordinate your travel plans!</p>
+          </div>
         ) : (
           messages.map((m) => {
             const isMe = m.sender === currentUser?.id || m.sender_username === currentUser?.username;
             return (
-              <div key={m.id} className={`chat-bubble-row ${isMe ? 'outgoing' : 'incoming'}`}>
-                <div className="chat-bubble">
-                  <div className="bubble-author">{m.sender_username}</div>
-                  <div className="bubble-content">{m.content}</div>
-                  <div className="bubble-time">{new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+              <div key={m.id} className={`chat-message-row ${isMe ? 'outgoing' : 'incoming'}`}>
+                {!isMe && (
+                  <div className="chat-user-avatar" title={m.sender_username}>
+                    {m.sender_username ? m.sender_username.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                )}
+                <div className="chat-bubble-card">
+                  {!isMe && <div className="chat-author-name">{m.sender_username}</div>}
+                  <div className="chat-text-body">{m.content}</div>
+                  <div className="chat-timestamp">
+                    {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
                 </div>
               </div>
             );
@@ -71,15 +92,18 @@ export default function TripChat({ tripId, currentUser }) {
         <div ref={endRef} />
       </div>
 
-      <form onSubmit={handleSend} className="chat-input-bar">
+      <form onSubmit={handleSend} className="messenger-input-tray">
         <input
           type="text"
-          className="form-input chat-input"
-          placeholder="Coordinate plans or say hello..."
+          className="messenger-input-field"
+          placeholder="Coordinate meetups, gear, permits, or say hello..."
           value={newMsg}
           onChange={(e) => setNewMsg(e.target.value)}
         />
-        <button type="submit" className="btn btn-primary send-btn">Send</button>
+        <button type="submit" className="btn-messenger-send" disabled={!newMsg.trim()}>
+          <span>Send</span>
+          <span className="send-arrow">➤</span>
+        </button>
       </form>
     </div>
   );

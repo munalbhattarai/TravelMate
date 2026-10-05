@@ -8,6 +8,7 @@ class Trip(models.Model):
         OPEN = "open", "Open"
         FULL = "full", "Full"
         IN_PROGRESS = "in_progress", "In Progress"
+        ONGOING = "ongoing", "Ongoing"
         COMPLETED = "completed", "Completed"
         CANCELLED = "cancelled", "Cancelled"
 

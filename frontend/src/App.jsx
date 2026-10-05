@@ -34,7 +34,7 @@ export default function App() {
         )}
         {route === 'register' && (
           <div className="auth-page-wrap">
-            <RegisterForm onSuccess={() => setRoute('login')} onSwitchToLogin={() => setRoute('login')} />
+            <RegisterForm onSuccess={() => setRoute('explore')} onSwitchToLogin={() => setRoute('login')} />
           </div>
         )}
       </Layout>

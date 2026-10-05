@@ -3,7 +3,7 @@ import { setTokens, clearTokens } from '../utils/token';
 
 export const authApi = {
   async login(username, password) {
-    const data = await api.post('/accounts/auth/token/', { username, password });
+    const data = await api.post('/auth/login/', { username, password });
     if (data.access) {
       setTokens(data.access, data.refresh);
     }
@@ -11,15 +11,15 @@ export const authApi = {
   },
 
   async register(userData) {
-    return api.post('/accounts/register/', userData);
+    return api.post('/auth/register/', userData);
   },
 
   async getProfile() {
-    return api.get('/accounts/profile/');
+    return api.get('/auth/me/');
   },
 
   async updatePreferences(preferences) {
-    return api.patch('/accounts/preferences/', preferences);
+    return api.patch('/auth/me/', { travel_preference: preferences });
   },
 
   logout() {

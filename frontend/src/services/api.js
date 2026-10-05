@@ -20,7 +20,7 @@ async function request(endpoint, options = {}) {
   // Handle Token Refresh on 401 Unauthorized
   if (response.status === 401 && getRefreshToken()) {
     try {
-      const refreshRes = await fetch(`${API_BASE}/accounts/auth/token/refresh/`, {
+      const refreshRes = await fetch(`${API_BASE}/auth/refresh/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh: getRefreshToken() }),
@@ -41,8 +41,47 @@ async function request(endpoint, options = {}) {
   }
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ detail: 'An error occurred' }));
-    throw new Error(errorData.detail || errorData.message || 'Request failed');
+    if (response.status === 502) {
+      throw new Error('Backend server is unreachable (502 Bad Gateway). Please make sure the Django server is running on port 8000.');
+    }
+    if (response.status === 503) {
+      throw new Error('Service is temporarily unavailable (503). Please try again shortly.');
+    }
+    if (response.status === 504) {
+      throw new Error('Gateway timeout (504): The server took too long to respond.');
+    }
+
+    let errorData;
+    try {
+      errorData = await response.json();
+    } catch {
+      errorData = { detail: response.statusText || 'An error occurred' };
+    }
+
+    let errorMessage = '';
+    if (typeof errorData === 'string') {
+      errorMessage = errorData;
+    } else if (errorData.detail) {
+      errorMessage = errorData.detail;
+    } else if (errorData.message) {
+      errorMessage = errorData.message;
+    } else if (errorData.non_field_errors) {
+      errorMessage = Array.isArray(errorData.non_field_errors)
+        ? errorData.non_field_errors.join(' ')
+        : String(errorData.non_field_errors);
+    } else if (typeof errorData === 'object' && errorData !== null) {
+      const fieldErrors = Object.entries(errorData)
+        .map(([field, errs]) => {
+          const text = Array.isArray(errs) ? errs.join(' ') : String(errs);
+          const fieldName = field.charAt(0).toUpperCase() + field.slice(1).replace(/_/g, ' ');
+          return `${fieldName}: ${text}`;
+        });
+      if (fieldErrors.length > 0) {
+        errorMessage = fieldErrors.join(' | ');
+      }
+    }
+
+    throw new Error(errorMessage || 'Request failed. Please check your inputs and try again.');
   }
 
   if (response.status === 204) return null;

@@ -13,16 +13,30 @@ class TripMatchesView(APIView):
 
     def get(self, request):
         trip_id = request.query_params.get("trip")
-        if not trip_id:
-            return Response(
-                {"detail": "Query parameter 'trip' is required."},
-                status=status.HTTP_400_BAD_REQUEST,
+        if trip_id:
+            trip = get_object_or_404(
+                Trip.objects.select_related("destination", "creator"),
+                pk=trip_id,
             )
-
-        trip = get_object_or_404(
-            Trip.objects.select_related("destination", "creator"),
-            pk=trip_id,
-        )
+        else:
+            trip = (
+                Trip.objects.select_related("destination", "creator")
+                .filter(creator=request.user)
+                .first()
+            )
+            if not trip:
+                trip = (
+                    Trip.objects.select_related("destination", "creator")
+                    .filter(status=Trip.Status.OPEN)
+                    .first()
+                )
+            if not trip:
+                trip = (
+                    Trip.objects.select_related("destination", "creator")
+                    .first()
+                )
+            if not trip:
+                return Response([], status=status.HTTP_200_OK)
 
         matches = match_users_for_trip(trip, request.user)
         serializer = MatchCandidateSerializer(matches, many=True)

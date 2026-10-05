@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import authBg from '../../assets/auth-bg.jpg';
 
 export default function LoginForm({ onSuccess, onSwitchToRegister }) {
   const { login } = useAuth();
@@ -23,51 +24,77 @@ export default function LoginForm({ onSuccess, onSwitchToRegister }) {
   };
 
   return (
-    <div className="auth-card">
-      <div className="auth-header">
-        <h2 className="auth-title">Welcome Back</h2>
-        <p className="auth-subtitle">Log in to discover travel companions & join trips</p>
-      </div>
+    <div className="auth-paper-container">
+      <div className="auth-paper-card">
+        {/* Left: Clean Form Side */}
+        <div className="auth-paper-form">
+          <div className="auth-paper-header">
+            <h2 className="auth-paper-title">SIGN IN</h2>
+            <p className="auth-paper-subtitle">Welcome back to TravelMate</p>
+          </div>
 
-      {error && <div className="alert-error">{error}</div>}
+          {error && <div className="auth-error-alert">{error}</div>}
 
-      <form onSubmit={handleSubmit} className="auth-form">
-        <div className="form-group">
-          <label className="form-label" htmlFor="username">Username</label>
-          <input
-            id="username"
-            type="text"
-            className="form-input"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="Enter your username"
-            required
-          />
+          <form onSubmit={handleSubmit} className="auth-paper-fields">
+            <div className="pill-input-group">
+              <span className="pill-input-icon">👤</span>
+              <input
+                id="login-username"
+                type="text"
+                className="pill-input-field"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Username or email"
+                required
+              />
+            </div>
+
+            <div className="pill-input-group">
+              <span className="pill-input-icon">🔒</span>
+              <input
+                id="login-password"
+                type="password"
+                className="pill-input-field"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                required
+              />
+            </div>
+
+            <button type="submit" className="btn-paper-cyan" disabled={loading}>
+              {loading ? 'SIGNING IN...' : 'SIGN IN'}
+            </button>
+          </form>
+
+          {/* Social Icons matching Image 1 */}
+          <div className="auth-social-row">
+            <button type="button" className="social-circle-btn fb" title="Facebook" aria-label="Sign in with Facebook">f</button>
+            <button type="button" className="social-circle-btn ggl" title="Google" aria-label="Sign in with Google">G</button>
+            <button type="button" className="social-circle-btn tw" title="Twitter" aria-label="Sign in with Twitter">𝕏</button>
+          </div>
+
+          <div className="auth-switch-caption">
+            <span>Don't have an account? </span>
+            <button type="button" onClick={onSwitchToRegister} className="btn-link-action">
+              Sign Up
+            </button>
+          </div>
         </div>
 
-        <div className="form-group">
-          <label className="form-label" htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            className="form-input"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            required
-          />
+        {/* Torn Paper Organic Divider */}
+        <div className="torn-edge-divider" aria-hidden="true" />
+
+        {/* Right: Immersive Ocean Kayak Visual (Directly from Image 1) */}
+        <div className="auth-paper-imagery">
+          <img src={authBg} alt="Aerial view of crystal clear lagoon with kayak" className="paper-img-media" />
+          <div className="paper-img-overlay">
+            <div className="paper-overlay-text">
+              <h3 className="paper-headline">TRAVEL COMPANIONS</h3>
+              <p className="paper-tagline">EXPLORE THE WORLD TOGETHER</p>
+            </div>
+          </div>
         </div>
-
-        <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
-          {loading ? 'Signing in...' : 'Sign In'}
-        </button>
-      </form>
-
-      <div className="auth-footer">
-        <span>Don't have an account? </span>
-        <button type="button" onClick={onSwitchToRegister} className="btn-link">
-          Sign Up
-        </button>
       </div>
     </div>
   );

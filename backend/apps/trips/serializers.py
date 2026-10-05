@@ -4,6 +4,9 @@ from rest_framework import serializers
 class TripSerializer(serializers.ModelSerializer):
     creator = serializers.ReadOnlyField(source="creator.username")
     destination_name = serializers.ReadOnlyField(source="destination.name")
+    destination_latitude = serializers.ReadOnlyField(source="destination.latitude")
+    destination_longitude = serializers.ReadOnlyField(source="destination.longitude")
+    destination_region = serializers.ReadOnlyField(source="destination.region")
 
     class Meta:
         model = Trip
@@ -12,6 +15,9 @@ class TripSerializer(serializers.ModelSerializer):
             "creator",
             "destination",
             "destination_name",
+            "destination_latitude",
+            "destination_longitude",
+            "destination_region",
             "title",
             "description",
             "start_date",

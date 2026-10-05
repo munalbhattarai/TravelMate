@@ -4,15 +4,16 @@ User = get_user_model()
 
 
 def calculate_budget_score(*, user, trip):
-    preference = user.travel_preference
+    preference = getattr(user, "travel_preference", None)
+    if not preference or preference.budget_min is None or preference.budget_max is None:
+        return 0
 
     budget_min = preference.budget_min
     budget_max = preference.budget_max
 
-    if budget_min is None or budget_max is None:
+    trip_budget = getattr(trip, "budget", 0)
+    if not trip_budget:
         return 0
-
-    trip_budget = trip.budget
 
     if budget_min <= trip_budget <= budget_max:
         return 100
@@ -46,8 +47,9 @@ def calculate_budget_score(*, user, trip):
     return 0
 
 def calculate_interest_score(*, user, trip):
-    user_interests = user.travel_preference.interests
-    trip_activities = trip.destination.activities
+    preference = getattr(user, "travel_preference", None)
+    user_interests = getattr(preference, "interests", []) if preference else []
+    trip_activities = getattr(trip.destination, "activities", []) if getattr(trip, "destination", None) else []
 
     if not user_interests or not trip_activities:
         return 0
@@ -74,8 +76,9 @@ def calculate_interest_score(*, user, trip):
     return round(match_percentage)
 
 def calculate_travel_style_score(*, user, trip):
-    preferred_styles = user.travel_preference.travel_styles
-    trip_style = trip.travel_style
+    preference = getattr(user, "travel_preference", None)
+    preferred_styles = getattr(preference, "travel_styles", []) if preference else []
+    trip_style = getattr(trip, "travel_style", "")
 
     if not preferred_styles or not trip_style:
         return 0
@@ -88,8 +91,9 @@ def calculate_travel_style_score(*, user, trip):
     return 100 if trip_style.strip().lower() in preferred else 0
 
 def calculate_transport_score(*, user, trip):
-    preferred_transport = user.travel_preference.preferred_transport
-    trip_transport = trip.transport
+    preference = getattr(user, "travel_preference", None)
+    preferred_transport = getattr(preference, "preferred_transport", "") if preference else ""
+    trip_transport = getattr(trip, "transport", "")
 
     if not preferred_transport or not trip_transport:
         return 0
@@ -102,10 +106,9 @@ def calculate_transport_score(*, user, trip):
     )
 
 def calculate_accommodation_score(*, user, trip):
-    preferred_accommodation = (
-        user.travel_preference.preferred_accommodation
-    )
-    trip_accommodation = trip.accommodation
+    preference = getattr(user, "travel_preference", None)
+    preferred_accommodation = getattr(preference, "preferred_accommodation", "") if preference else ""
+    trip_accommodation = getattr(trip, "accommodation", "")
 
     if not preferred_accommodation or not trip_accommodation:
         return 0
@@ -118,8 +121,9 @@ def calculate_accommodation_score(*, user, trip):
     )
 
 def calculate_destination_score(*, user, trip):
-    preferred_destinations = user.travel_preference.preferred_destinations
-    if not preferred_destinations or not trip.destination:
+    preference = getattr(user, "travel_preference", None)
+    preferred_destinations = getattr(preference, "preferred_destinations", []) if preference else []
+    if not preferred_destinations or not getattr(trip, "destination", None):
         return 0
 
     preferred = {
@@ -133,8 +137,9 @@ def calculate_destination_score(*, user, trip):
     return 100 if (dest_name in preferred or dest_id in preferred) else 0
 
 def calculate_date_score(*, user, trip):
-    preferred_duration = user.travel_preference.preferred_duration_days
-    if not preferred_duration or not trip.start_date or not trip.end_date:
+    preference = getattr(user, "travel_preference", None)
+    preferred_duration = getattr(preference, "preferred_duration_days", None) if preference else None
+    if not preferred_duration or not getattr(trip, "start_date", None) or not getattr(trip, "end_date", None):
         return 0
 
     trip_duration = (trip.end_date - trip.start_date).days
@@ -154,8 +159,9 @@ def calculate_date_score(*, user, trip):
     return 0
 
 def calculate_language_score(*, user, trip):
-    user_languages = user.travel_preference.languages
-    trip_languages = trip.languages
+    preference = getattr(user, "travel_preference", None)
+    user_languages = getattr(preference, "languages", []) if preference else []
+    trip_languages = getattr(trip, "languages", [])
 
     if not user_languages or not trip_languages:
         return 0
