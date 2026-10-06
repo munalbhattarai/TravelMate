@@ -25,7 +25,7 @@ def create_expense_with_split(
     paid_by,
     amount,
     description,
-    category,
+    category=Expense.Category.OTHER,
     participant_ids,
 ):
     if not participant_ids:

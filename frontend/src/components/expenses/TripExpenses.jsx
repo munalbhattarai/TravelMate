@@ -8,7 +8,7 @@ export default function TripExpenses({ expenses = [] }) {
       <div className="expenses-summary-card">
         <h3>💰 Trip Shared Expenses</h3>
         <p>Deterministic fair split among trip members</p>
-        <div className="total-budget-badge">Total Logged: ${total.toFixed(2)}</div>
+        <div className="total-budget-badge">Total Logged: NPR {total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
       </div>
 
       {expenses.length === 0 ? (
@@ -28,11 +28,11 @@ export default function TripExpenses({ expenses = [] }) {
             <tbody>
               {expenses.map((exp) => (
                 <tr key={exp.id}>
-                  <td><strong>{exp.title}</strong></td>
-                  <td><span className="tag-chip">{exp.category || 'General'}</span></td>
-                  <td>{exp.payer_username || 'Member'}</td>
-                  <td className="expense-amt">${parseFloat(exp.amount).toFixed(2)}</td>
-                  <td>{exp.date || 'Recent'}</td>
+                  <td><strong>{exp.description || exp.title}</strong></td>
+                  <td><span className="tag-chip">{exp.category || 'other'}</span></td>
+                  <td>{exp.paid_by_username || exp.payer_username || 'Member'}</td>
+                  <td className="expense-amt">NPR {parseFloat(exp.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                  <td>{exp.created_at ? new Date(exp.created_at).toLocaleDateString() : (exp.date || 'Recent')}</td>
                 </tr>
               ))}
             </tbody>
