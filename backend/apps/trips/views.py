@@ -1,6 +1,7 @@
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .services import request_to_join
 from rest_framework import (
     filters,
     permissions,
@@ -28,6 +29,8 @@ class TripViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_permissions(self):
+        if self.action in ["list", "retrieve"]:
+            return [permissions.AllowAny()]
         if self.action in [
             "update",
             "partial_update",
@@ -45,8 +48,17 @@ class TripViewSet(viewsets.ModelViewSet):
     ordering = ["start_date"]
 
     def get_queryset(self):
-        queryset = Trip.objects.select_related("creator", "destination").all()
+        queryset = Trip.objects.select_related("creator", "destination").prefetch_related("memberships").all()
         params = self.request.query_params
+
+        query = params.get("query")
+        if query:
+            from django.db.models import Q
+            queryset = queryset.filter(
+                Q(title__icontains=query) |
+                Q(description__icontains=query) |
+                Q(destination__name__icontains=query)
+            )
 
         destination = params.get("destination")
         if destination:
@@ -79,21 +91,86 @@ class TripViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        serializer.save(creator=self.request.user)
+        trip = serializer.save(creator=self.request.user)
+        TripMembership.objects.get_or_create(
+            trip=trip,
+            user=self.request.user,
+            defaults={
+                "status": TripMembership.Status.ACCEPTED,
+                "joined_at": timezone.now(),
+            },
+        )
 
-    @action(
-    detail=True,
-    methods=["get"],
-    url_path="memberships",
-)
-    def memberships(self, request, pk=None):
+    @action(detail=True, methods=["post"], url_path="join")
+    def join(self, request, pk=None):
         trip = self.get_object()
+        try:
+            membership = request_to_join(trip=trip, user=request.user)
+        except ValueError as exc:
+            return Response(
+                {"detail": str(exc)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response(
+            TripMembershipSerializer(membership).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+    @action(detail=True, methods=["get", "post"], url_path="requests")
+    def requests(self, request, pk=None):
+        trip = self.get_object()
+        if request.method == "POST":
+            try:
+                membership = request_to_join(trip=trip, user=request.user)
+            except ValueError as exc:
+                return Response(
+                    {"detail": str(exc)},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            return Response(
+                TripMembershipSerializer(membership).data,
+                status=status.HTTP_201_CREATED,
+            )
 
         if trip.creator != request.user:
             return Response(
-                {"detail": "Only the trip creator can view membership requests."},
+                {"detail": "Only the trip creator can view requests."},
                 status=status.HTTP_403_FORBIDDEN,
             )
+        memberships = TripMembership.objects.filter(
+            trip=trip,
+            status=TripMembership.Status.PENDING,
+        ).select_related("user", "user__profile")
+        return Response(
+            TripMembershipSerializer(memberships, many=True).data,
+            status=status.HTTP_200_OK,
+        )
+
+    @action(detail=True, methods=["post"], url_path=r"members/(?P<membership_id>\d+)/accept")
+    def accept_member(self, request, pk=None, membership_id=None):
+        membership = get_object_or_404(TripMembership, pk=membership_id, trip_id=pk)
+        try:
+            membership = accept_membership(membership=membership, accepted_by=request.user)
+        except ValueError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(TripMembershipSerializer(membership).data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"], url_path=r"members/(?P<membership_id>\d+)/reject")
+    def reject_member(self, request, pk=None, membership_id=None):
+        membership = get_object_or_404(TripMembership, pk=membership_id, trip_id=pk)
+        try:
+            membership = reject_membership(membership=membership, rejected_by=request.user)
+        except ValueError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(TripMembershipSerializer(membership).data, status=status.HTTP_200_OK)
+
+    @action(
+        detail=True,
+        methods=["get"],
+        url_path="memberships",
+    )
+    def memberships(self, request, pk=None):
+        trip = self.get_object()
 
         memberships = TripMembership.objects.filter(
             trip=trip
