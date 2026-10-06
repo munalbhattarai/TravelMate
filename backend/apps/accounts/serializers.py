@@ -11,6 +11,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         write_only=True,
         min_length=8,
     )
+    travel_style = serializers.CharField(required=False, write_only=True, allow_blank=True)
+    pace = serializers.CharField(required=False, write_only=True, allow_blank=True)
 
     class Meta:
         model = User
@@ -18,10 +20,20 @@ class RegisterSerializer(serializers.ModelSerializer):
             "username",
             "email",
             "password",
+            "travel_style",
+            "pace",
         )
 
     def create(self, validated_data):
-        return register_user(**validated_data)
+        travel_style = validated_data.pop("travel_style", None)
+        validated_data.pop("pace", None)
+        user = register_user(**validated_data)
+        if travel_style:
+            pref = getattr(user, "travel_preference", None)
+            if pref:
+                pref.travel_styles = [travel_style]
+                pref.save()
+        return user
     
 class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
