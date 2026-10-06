@@ -45,14 +45,10 @@ export default function RegisterForm({ onSuccess, onSwitchToLogin }) {
     setLoading(true);
     try {
       await register(formData);
-      try {
-        await login(formData.username, formData.password);
-      } catch {
-        // Fallback
-      }
+      await login(formData.username, formData.password);
       if (onSuccess) onSuccess();
     } catch (err) {
-      setError(err.message || 'Registration failed');
+      setError(err.message || 'Registration failed. Please check your inputs.');
     } finally {
       setLoading(false);
     }
