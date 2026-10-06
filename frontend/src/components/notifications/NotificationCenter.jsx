@@ -62,7 +62,7 @@ export default function NotificationCenter({ onClose }) {
               className={`notification-item ${n.is_read ? 'read' : 'unread'}`}
               onClick={() => !n.is_read && handleMarkRead(n.id)}
             >
-              <div className="notif-type-tag">{n.type.replace('_', ' ').toUpperCase()}</div>
+              <div className="notif-type-tag">{(n.type || '').replace('_', ' ').toUpperCase()}</div>
               <p className="notif-text">
                 {n.payload?.message || n.payload?.trip_title || 'You have a new update.'}
               </p>
