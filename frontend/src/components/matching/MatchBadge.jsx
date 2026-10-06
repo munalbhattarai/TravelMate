@@ -1,12 +1,17 @@
 import React from 'react';
 
 export default function MatchBadge({ score }) {
-  const percentage = Math.round(score * 100);
-  let colorClass = 'badge-affinity-low';
+  const num = typeof score === 'number' ? score : parseFloat(score) || 0;
+  // If score is already on a 0-100 scale (e.g. 15, 30, 85, 94), clamp to 0-100.
+  // If score is fractional <= 1 (e.g. 0.85), multiply by 100.
+  const percentage = num > 1 
+    ? Math.max(0, Math.min(100, Math.round(num))) 
+    : Math.max(0, Math.min(100, Math.round(num * 100)));
 
-  if (percentage >= 80) {
+  let colorClass = 'badge-affinity-low';
+  if (percentage >= 75) {
     colorClass = 'badge-affinity-high';
-  } else if (percentage >= 60) {
+  } else if (percentage >= 45) {
     colorClass = 'badge-affinity-medium';
   }
 
