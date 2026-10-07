@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import ExploreTrips from './pages/ExploreTrips';
 import MatchesPage from './pages/MatchesPage';
 import TripDetailPage from './pages/TripDetailPage';
+import ProfilePage from './pages/ProfilePage';
 import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
 import './App.css';
@@ -18,12 +19,21 @@ export default function App() {
     setRoute('trip-detail');
   };
 
+  React.useEffect(() => {
+    const handleLogout = () => {
+      setRoute('login');
+    };
+    window.addEventListener('auth:logout', handleLogout);
+    return () => window.removeEventListener('auth:logout', handleLogout);
+  }, []);
+
   return (
     <AuthProvider>
       <Layout currentRoute={route} onNavigate={(r) => { setRoute(r); setSelectedTripId(null); }}>
         {route === 'home' && <Home onNavigate={setRoute} />}
         {route === 'explore' && <ExploreTrips onSelectTrip={handleSelectTrip} />}
         {route === 'matches' && <MatchesPage />}
+        {route === 'profile' && <ProfilePage onNavigateTrip={handleSelectTrip} />}
         {route === 'trip-detail' && selectedTripId && (
           <TripDetailPage tripId={selectedTripId} onBack={() => setRoute('explore')} />
         )}
@@ -34,7 +44,7 @@ export default function App() {
         )}
         {route === 'register' && (
           <div className="auth-page-wrap">
-            <RegisterForm onSuccess={() => setRoute('login')} onSwitchToLogin={() => setRoute('login')} />
+            <RegisterForm onSuccess={() => setRoute('explore')} onSwitchToLogin={() => setRoute('login')} />
           </div>
         )}
       </Layout>
