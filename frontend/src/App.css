@@ -1387,6 +1387,59 @@
   box-shadow: 0 6px 18px rgba(26, 56, 38, 0.35);
 }
 
+.btn-lifecycle {
+  padding: 0.5rem 1.15rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid transparent;
+}
+
+.btn-lifecycle-start {
+  background: #065f46;
+  color: #ecfdf5;
+  border-color: #047857;
+}
+.btn-lifecycle-start:hover {
+  background: #047857;
+  transform: translateY(-1px);
+}
+
+.btn-lifecycle-complete {
+  background: #1e3a8a;
+  color: #eff6ff;
+  border-color: #1d4ed8;
+}
+.btn-lifecycle-complete:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.btn-lifecycle-cancel {
+  background: #fff1f2;
+  color: #be123c;
+  border-color: #fecdd3;
+}
+.btn-lifecycle-cancel:hover {
+  background: #ffe4e6;
+  color: #9f1239;
+}
+
+.btn-lifecycle-leave {
+  background: #f8fafc;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+.btn-lifecycle-leave:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
 /* Dossier Header Block */
 .trip-dossier-header-block {
   margin-bottom: 1.5rem;

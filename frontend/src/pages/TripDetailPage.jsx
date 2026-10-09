@@ -80,6 +80,50 @@ export default function TripDetailPage({ tripId, onBack }) {
     }
   };
 
+  const handleStartTrip = async () => {
+    if (!window.confirm('Are you ready to mark this expedition as Ongoing / In Progress?')) return;
+    try {
+      await tripApi.startTrip(tripId);
+      setActionMsg('Expedition started! Safe travels on the trails.');
+      loadData();
+    } catch (err) {
+      setActionError(err.message || 'Could not start expedition.');
+    }
+  };
+
+  const handleCompleteTrip = async () => {
+    if (!window.confirm('Mark this expedition as Completed? Members will be prompted to leave peer reviews.')) return;
+    try {
+      await tripApi.completeTrip(tripId);
+      setActionMsg('Expedition marked as Completed! Great job reaching the summit/destination.');
+      loadData();
+    } catch (err) {
+      setActionError(err.message || 'Could not complete trip.');
+    }
+  };
+
+  const handleCancelTrip = async () => {
+    if (!window.confirm('Are you sure you want to cancel this trip?')) return;
+    try {
+      await tripApi.cancelTrip(tripId);
+      setActionMsg('Trip has been cancelled.');
+      loadData();
+    } catch (err) {
+      setActionError(err.message || 'Could not cancel trip.');
+    }
+  };
+
+  const handleLeaveTrip = async () => {
+    if (!window.confirm('Are you sure you want to leave this trip?')) return;
+    try {
+      await tripApi.leaveTrip(tripId);
+      setActionMsg('You have successfully left the expedition.');
+      loadData();
+    } catch (err) {
+      setActionError(err.message || 'Could not leave trip.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="trip-detail-loading">
@@ -151,6 +195,30 @@ export default function TripDetailPage({ tripId, onBack }) {
 
             {isCreator && (
               <span className="status-pill creator-badge">👑 You are the Trip Leader</span>
+            )}
+
+            {isCreator && (trip.status === 'open' || trip.status === 'full') && (
+              <button className="btn-lifecycle btn-lifecycle-start" onClick={handleStartTrip}>
+                🚀 Start Expedition
+              </button>
+            )}
+
+            {isCreator && trip.status === 'ongoing' && (
+              <button className="btn-lifecycle btn-lifecycle-complete" onClick={handleCompleteTrip}>
+                🏁 Mark Completed
+              </button>
+            )}
+
+            {isCreator && trip.status !== 'completed' && trip.status !== 'cancelled' && (
+              <button className="btn-lifecycle btn-lifecycle-cancel" onClick={handleCancelTrip}>
+                ✕ Cancel Trip
+              </button>
+            )}
+
+            {myMembership && myMembership.status === 'accepted' && !isCreator && trip.status !== 'completed' && (
+              <button className="btn-lifecycle btn-lifecycle-leave" onClick={handleLeaveTrip}>
+                🚪 Leave Trip
+              </button>
             )}
           </div>
         </div>

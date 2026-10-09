@@ -30,6 +30,22 @@ export const tripApi = {
     return api.patch(`/trips/${tripId}/`, { status });
   },
 
+  async startTrip(tripId) {
+    return api.post(`/trips/${tripId}/start/`, {});
+  },
+
+  async completeTrip(tripId) {
+    return api.post(`/trips/${tripId}/complete/`, {});
+  },
+
+  async cancelTrip(tripId) {
+    return api.post(`/trips/${tripId}/cancel/`, {});
+  },
+
+  async leaveTrip(tripId) {
+    return api.post(`/trips/${tripId}/leave/`, {});
+  },
+
   async getItinerary(tripId) {
     return api.get(`/trips/${tripId}/itineraries/`);
   },
