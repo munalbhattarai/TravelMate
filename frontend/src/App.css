@@ -3895,3 +3895,233 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================================
+   NEPAL TRAVEL SAFETY DIRECTORY & MODAL (FR-10)
+   ============================================================ */
+.nav-safety-pill {
+  color: #047857 !important;
+  font-weight: 700 !important;
+}
+
+.safety-modal-content {
+  max-width: 840px;
+}
+
+.safety-modal-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.safety-shield-icon {
+  font-size: 2rem;
+  background: #ecfdf5;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.safety-tabs-row {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.85rem 1.5rem 0;
+  background: #fbf9f5;
+  border-bottom: 1px solid var(--border);
+}
+
+.safety-tab-btn {
+  background: transparent;
+  border: none;
+  padding: 0.65rem 1.1rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.safety-tab-btn:hover {
+  color: var(--primary);
+}
+
+.safety-tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.safety-modal-body {
+  padding: 1.5rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.safety-alert-box {
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  color: #92400e;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.86rem;
+}
+
+.safety-contacts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 1rem;
+}
+
+.safety-contact-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+}
+
+.contact-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.contact-card-top h4 {
+  font-size: 0.98rem;
+  font-weight: 800;
+  margin: 0;
+  color: var(--text-dark);
+}
+
+.badge-sos {
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+}
+
+.contact-desc {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-bottom: 0.65rem;
+  flex: 1;
+}
+
+.contact-meta {
+  font-size: 0.8rem;
+  color: #78716c;
+  margin-bottom: 0.75rem;
+}
+
+.contact-phone-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.65rem;
+  border-top: 1px dashed #eee8df;
+}
+
+.btn-call-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #047857;
+  color: #ffffff;
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.btn-call-link:hover {
+  background: #065f46;
+  transform: translateY(-1px);
+}
+
+.ams-golden-rules {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.ams-golden-rules h4 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 0.85rem;
+}
+
+.ams-rules-list {
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  font-size: 0.88rem;
+  color: #334155;
+  line-height: 1.5;
+}
+
+.ams-medication-tip {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  font-size: 0.86rem;
+}
+
+.trust-guidelines-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.trust-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.15rem;
+}
+
+.trust-card h5 {
+  font-size: 0.92rem;
+  font-weight: 800;
+  margin-bottom: 0.35rem;
+  color: var(--text-dark);
+}
+
+.trust-card p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.report-cta-box {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.safety-modal-footer {
+  padding: 1rem 1.5rem;
+  background: #fdfaf6;
+  border-top: 1px solid var(--border);
+}

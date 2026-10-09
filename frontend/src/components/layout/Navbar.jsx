@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import NotificationCenter from '../notifications/NotificationCenter';
+import SafetyCenterModal from '../moderation/SafetyCenterModal';
+import ReportModal from '../moderation/ReportModal';
 
 export default function Navbar({ currentRoute, onNavigate }) {
   const { user, logout } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [safetyModalOpen, setSafetyModalOpen] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
 
   return (
     <header className="floating-navbar-wrapper">
@@ -43,6 +47,13 @@ export default function Navbar({ currentRoute, onNavigate }) {
               My Profile
             </button>
           )}
+          <button
+            className="nav-item nav-safety-pill"
+            onClick={() => setSafetyModalOpen(true)}
+            title="Nepal Travel Safety Directory & Protocols"
+          >
+            🛡️ Safety
+          </button>
         </nav>
 
         <div className="nav-actions">
@@ -97,6 +108,22 @@ export default function Navbar({ currentRoute, onNavigate }) {
           )}
         </div>
       </div>
+
+      {/* Safety Center Modal */}
+      <SafetyCenterModal
+        isOpen={safetyModalOpen}
+        onClose={() => setSafetyModalOpen(false)}
+        onOpenReport={() => setReportModalOpen(true)}
+      />
+
+      {/* General Moderation Report Modal */}
+      <ReportModal
+        isOpen={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        targetType="general"
+        targetId={null}
+        targetName="Safety & Moderation Issue"
+      />
     </header>
   );
 }
