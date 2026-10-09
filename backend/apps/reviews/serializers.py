@@ -8,12 +8,14 @@ class ReviewSerializer(serializers.ModelSerializer):
     reviewed_user_username = serializers.ReadOnlyField(
         source="reviewed_user.username"
     )
+    trip_title = serializers.ReadOnlyField(source="trip.title")
 
     class Meta:
         model = Review
         fields = (
             "id",
             "trip",
+            "trip_title",
             "reviewer",
             "reviewed_user",
             "reviewed_user_username",

@@ -271,20 +271,48 @@ export default function ProfilePage({ onNavigateTrip }) {
             />
           </div>
 
-          {/* Peer Reviews Snippet */}
+          {/* Peer Reviews Ledger */}
           <div className="reviews-section-box mt-4">
-            <h4>💬 Reviews from Companions ({reviews.length})</h4>
+            <div className="reviews-box-header">
+              <h4>💬 Companion Reviews & Endorsements ({reviews.length})</h4>
+              {reviews.length > 0 && (
+                <span className="avg-rating-pill">
+                  ⭐ {(reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)} / 5.0
+                </span>
+              )}
+            </div>
             {reviews.length === 0 ? (
-              <p className="text-muted text-xs mt-2">No reviews recorded yet. Reviews are unlocked once you complete trips with other companions.</p>
+              <p className="text-muted text-xs mt-2">
+                No peer reviews recorded yet. Reviews are verified and unlocked once you complete expeditions with other companions.
+              </p>
             ) : (
-              <div className="reviews-list mt-2">
+              <div className="reviews-list mt-3">
                 {reviews.map((r) => (
                   <div key={r.id} className="review-item-card">
-                    <div className="review-top">
-                      <strong>{r.reviewer_username || 'Companion'}</strong>
-                      <span>⭐ {r.rating} / 5</span>
+                    <div className="review-item-header">
+                      <div className="reviewer-info-group">
+                        <span className="reviewer-avatar-mini">
+                          {(r.reviewer || r.reviewer_username || 'C').charAt(0).toUpperCase()}
+                        </span>
+                        <div>
+                          <strong className="reviewer-name">{r.reviewer || r.reviewer_username || 'Companion'}</strong>
+                          {r.trip_title && (
+                            <span className="review-trip-tag">🏔️ {r.trip_title}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="review-stars-group">
+                        <span className="stars-rendered">{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span>
+                        <span className="rating-score">({r.rating}/5)</span>
+                      </div>
                     </div>
-                    <p className="review-comment text-sm">{r.comment}</p>
+                    {r.comment && <p className="review-comment-text">{r.comment}</p>}
+                    <div className="review-footer-row">
+                      <span className="verified-companion-tag">✓ Verified Expedition Companion</span>
+                      <span className="review-date-text">
+                        {r.created_at ? new Date(r.created_at).toLocaleDateString() : 'Recent'}
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>
