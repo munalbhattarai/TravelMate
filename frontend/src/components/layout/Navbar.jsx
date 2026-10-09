@@ -63,16 +63,12 @@ export default function Navbar({ currentRoute, onNavigate }) {
                 )}
               </div>
 
-<<<<<<< HEAD
               <div 
                 className="user-profile-pill" 
                 onClick={() => onNavigate('profile')} 
                 style={{ cursor: 'pointer' }}
                 title="View & Edit Travel Profile"
               >
-=======
-              <div className="user-profile-pill">
->>>>>>> 7c246394e7074765dc469146b61ae7725615cb5f
                 <span className="user-avatar-dot">
                   {user.username ? user.username.charAt(0).toUpperCase() : 'U'}
                 </span>

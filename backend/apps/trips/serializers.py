@@ -7,13 +7,10 @@ class TripSerializer(serializers.ModelSerializer):
     destination_latitude = serializers.ReadOnlyField(source="destination.latitude")
     destination_longitude = serializers.ReadOnlyField(source="destination.longitude")
     destination_region = serializers.ReadOnlyField(source="destination.region")
-<<<<<<< HEAD
     current_members = serializers.SerializerMethodField()
 
     def get_current_members(self, obj):
         return obj.memberships.filter(status='accepted').count()
-=======
->>>>>>> 7c246394e7074765dc469146b61ae7725615cb5f
 
     class Meta:
         model = Trip

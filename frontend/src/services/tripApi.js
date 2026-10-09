@@ -34,13 +34,10 @@ export const tripApi = {
     return api.get(`/trips/${tripId}/itineraries/`);
   },
 
-<<<<<<< HEAD
   async addItineraryDay(tripId, data) {
     return api.post(`/trips/${tripId}/itineraries/`, data);
   },
 
-=======
->>>>>>> 7c246394e7074765dc469146b61ae7725615cb5f
   async getMemberships(tripId) {
     return api.get(`/trips/${tripId}/memberships/`);
   },

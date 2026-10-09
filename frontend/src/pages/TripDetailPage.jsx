@@ -5,11 +5,8 @@ import TripChat from '../components/chat/TripChat';
 import TripItinerary from '../components/trip/TripItinerary';
 import TripExpenses from '../components/expenses/TripExpenses';
 import NepalTripMap from '../components/map/NepalTripMap';
-<<<<<<< HEAD
 import ReviewModal from '../components/reviews/ReviewModal';
 import ReportModal from '../components/moderation/ReportModal';
-=======
->>>>>>> 7c246394e7074765dc469146b61ae7725615cb5f
 
 export default function TripDetailPage({ tripId, onBack }) {
   const { user } = useAuth();
@@ -21,13 +18,10 @@ export default function TripDetailPage({ tripId, onBack }) {
   const [loading, setLoading] = useState(true);
   const [actionMsg, setActionMsg] = useState('');
   const [actionError, setActionError] = useState('');
-<<<<<<< HEAD
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [memberToReview, setMemberToReview] = useState(null);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportTarget, setReportTarget] = useState({ type: 'trip', id: null, name: '' });
-=======
->>>>>>> 7c246394e7074765dc469146b61ae7725615cb5f
 
   const loadData = async () => {
     try {
@@ -107,13 +101,8 @@ export default function TripDetailPage({ tripId, onBack }) {
     );
   }
 
-<<<<<<< HEAD
   const isCreator = user && user.username === trip.creator;
   const myMembership = memberships.find((m) => m.user === user?.username);
-=======
-  const isCreator = user && (user.username === trip.creator || user.id === trip.creator_id);
-  const myMembership = memberships.find((m) => m.user === user?.username || m.user_id === user?.id);
->>>>>>> 7c246394e7074765dc469146b61ae7725615cb5f
   const isAcceptedMember = isCreator || myMembership?.status === 'accepted';
   const pendingRequests = memberships.filter((m) => m.status === 'pending');
   const acceptedMembers = memberships.filter((m) => m.status === 'accepted');
@@ -333,7 +322,6 @@ export default function TripDetailPage({ tripId, onBack }) {
                         <span className="member-username">{m.user}</span>
                         <span className="member-role-tag">🎒 Confirmed Companion</span>
                       </div>
-<<<<<<< HEAD
                       <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center' }}>
                         <span className="member-status-ok">Ready to Trek</span>
                         {user && user.username !== m.user && (
@@ -363,9 +351,6 @@ export default function TripDetailPage({ tripId, onBack }) {
                           </button>
                         )}
                       </div>
-=======
-                      <span className="member-status-ok">Ready to Trek</span>
->>>>>>> 7c246394e7074765dc469146b61ae7725615cb5f
                     </div>
                   ))}
 
@@ -434,11 +419,7 @@ export default function TripDetailPage({ tripId, onBack }) {
         )}
 
         {activeTab === 'itinerary' && (
-<<<<<<< HEAD
           <TripItinerary itineraries={itineraries} />
-=======
-          <TripItinerary itineraries={itineraries} tripId={trip.id} isCreator={isCreator} onRefresh={loadData} />
->>>>>>> 7c246394e7074765dc469146b61ae7725615cb5f
         )}
 
         {activeTab === 'chat' && (
