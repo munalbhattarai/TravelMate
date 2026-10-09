@@ -90,6 +90,8 @@ class MeSerializer(serializers.ModelSerializer):
             "username",
             "email",
             "role",
+            "is_staff",
+            "is_superuser",
             "profile",
             "travel_preference",
         )
@@ -97,6 +99,8 @@ class MeSerializer(serializers.ModelSerializer):
             "id",
             "username",
             "role",
+            "is_staff",
+            "is_superuser",
         )
 
     def update(self, instance, validated_data):
