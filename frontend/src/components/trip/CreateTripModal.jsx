@@ -47,8 +47,13 @@ export default function CreateTripModal({ isOpen, onClose, onTripCreated }) {
       destinationApi.getDestinations().then((res) => {
         const list = res.results || res || [];
         setDestinations(list);
+<<<<<<< HEAD
         if (list.length > 0) {
           setFormData((prev) => prev.destination ? prev : { ...prev, destination: list[0].id });
+=======
+        if (list.length > 0 && !formData.destination) {
+          setFormData((prev) => ({ ...prev, destination: list[0].id }));
+>>>>>>> 7c246394e7074765dc469146b61ae7725615cb5f
         }
       }).catch(() => {});
     }

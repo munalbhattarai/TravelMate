@@ -20,6 +20,7 @@ export const authApi = {
 
   async updatePreferences(preferences) {
     return api.patch('/auth/me/', { travel_preference: preferences });
+<<<<<<< HEAD
   },
 
   async updateProfile(profileData) {
@@ -28,6 +29,8 @@ export const authApi = {
 
   async updateFullProfile(payload) {
     return api.patch('/auth/me/', payload);
+=======
+>>>>>>> 7c246394e7074765dc469146b61ae7725615cb5f
   },
 
   logout() {

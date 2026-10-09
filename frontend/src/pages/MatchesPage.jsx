@@ -84,7 +84,11 @@ export default function MatchesPage() {
       ) : (
         <div className="matches-grid">
           {matches.map((item, idx) => {
+<<<<<<< HEAD
             const candidate = item.user || item;
+=======
+            const user = item.user || item;
+>>>>>>> 7c246394e7074765dc469146b61ae7725615cb5f
             const score = item.compatibility_score ?? item.score ?? 85;
             return (
               <div key={candidate.id || idx} className="match-card glass-panel">
@@ -106,7 +110,11 @@ export default function MatchesPage() {
                     className="btn btn-outline btn-sm"
                     onClick={() => setSelectedBreakdown({
                       breakdown: item.breakdown || {},
+<<<<<<< HEAD
                       candidateName: candidate.username,
+=======
+                      candidateName: user.username,
+>>>>>>> 7c246394e7074765dc469146b61ae7725615cb5f
                       score: score,
                     })}
                   >
