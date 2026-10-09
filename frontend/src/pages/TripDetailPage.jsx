@@ -504,7 +504,12 @@ export default function TripDetailPage({ tripId, onBack }) {
         )}
 
         {activeTab === 'expenses' && (
-          <TripExpenses expenses={expenses} tripId={trip.id} currentUser={user} onRefresh={loadData} />
+          <TripExpenses
+            expenses={expenses}
+            tripId={trip.id}
+            members={acceptedMembers}
+            onExpenseAdded={loadData}
+          />
         )}
 
         {activeTab === 'map' && (
