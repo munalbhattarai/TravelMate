@@ -7,6 +7,7 @@ import TripExpenses from '../components/expenses/TripExpenses';
 import NepalTripMap from '../components/map/NepalTripMap';
 import ReviewModal from '../components/reviews/ReviewModal';
 import ReportModal from '../components/moderation/ReportModal';
+import TripPackingList from '../components/trip/TripPackingList';
 
 export default function TripDetailPage({ tripId, onBack }) {
   const { user } = useAuth();
@@ -352,6 +353,14 @@ export default function TripDetailPage({ tripId, onBack }) {
             <span className="ws-tab-icon">🗺️</span>
             <span>Route & Nepal Map</span>
           </button>
+
+          <button 
+            className={`ws-tab-btn ${activeTab === 'packing' ? 'active' : ''}`}
+            onClick={() => setActiveTab('packing')}
+          >
+            <span className="ws-tab-icon">🎒</span>
+            <span>Gear Checklist</span>
+          </button>
         </div>
       </div>
 
@@ -514,6 +523,10 @@ export default function TripDetailPage({ tripId, onBack }) {
             </div>
             <NepalTripMap singleTrip={trip} height="560px" />
           </div>
+        )}
+
+        {activeTab === 'packing' && (
+          <TripPackingList tripId={trip.id} destinationName={trip.destination_name} />
         )}
       </div>
 
