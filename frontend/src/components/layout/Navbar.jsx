@@ -47,6 +47,8 @@ export default function Navbar({ currentRoute, onNavigate }) {
     };
   }, [showNotifications]);
 
+  const isAdmin = Boolean(user && (user.role === 'admin' || user.is_staff || user.is_superuser));
+
   return (
     <header className="top-site-navbar">
       <div className="top-site-navbar-container">
@@ -74,6 +76,16 @@ export default function Navbar({ currentRoute, onNavigate }) {
               onClick={() => onNavigate('matches')}
             >
               Partner Matches
+            </button>
+          )}
+          {isAdmin && (
+            <button
+              className={`nav-item nav-admin-nav-item ${currentRoute === 'admin' ? 'active' : ''}`}
+              onClick={() => onNavigate('admin')}
+              title="TravelMate Central Administration Console"
+              style={{ fontWeight: 650, color: currentRoute === 'admin' ? '#4338ca' : '#6366f1' }}
+            >
+              🛡️ Admin Console
             </button>
           )}
           <button
@@ -128,8 +140,16 @@ export default function Navbar({ currentRoute, onNavigate }) {
                     🏔️ Guide
                   </span>
                 )}
-                {user.role === 'admin' && (
-                  <span className="nav-role-badge" title="System Administrator" style={{ fontSize: '0.68rem', background: '#ede9fe', color: '#6d28d9', padding: '0.15rem 0.45rem', borderRadius: '10px', fontWeight: 700, marginLeft: '0.2rem' }}>
+                {isAdmin && (
+                  <span 
+                    className="nav-role-badge" 
+                    title="System Administrator - Click for Admin Console" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onNavigate('admin');
+                    }}
+                    style={{ fontSize: '0.68rem', background: '#ede9fe', color: '#6d28d9', padding: '0.15rem 0.45rem', borderRadius: '10px', fontWeight: 700, marginLeft: '0.2rem', cursor: 'pointer' }}
+                  >
                     ⚙️ Admin
                   </span>
                 )}
