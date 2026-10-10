@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 const EMERGENCY_CONTACTS = [
   {
@@ -38,10 +39,23 @@ const EMERGENCY_CONTACTS = [
 export default function SafetyCenterModal({ isOpen, onClose, onOpenReport }) {
   const [activeTab, setActiveTab] = useState('sos');
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
-  return (
-    <div className="modal-backdrop" onClick={onClose}>
+  return createPortal(
+    <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content modal-lg safety-modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div className="safety-modal-title-group">
@@ -51,7 +65,7 @@ export default function SafetyCenterModal({ isOpen, onClose, onOpenReport }) {
               <p className="text-muted text-sm">Verified emergency protocols, alpine safety, and traveler protection.</p>
             </div>
           </div>
-          <button className="modal-close-btn" onClick={onClose}>✕</button>
+          <button className="btn-icon-close" onClick={onClose} aria-label="Close modal">✕</button>
         </div>
 
         {/* Navigation Tabs */}
@@ -183,6 +197,7 @@ export default function SafetyCenterModal({ isOpen, onClose, onOpenReport }) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { tripApi } from '../../services/tripApi';
 import { destinationApi } from '../../services/destinationApi';
 import CustomSelect from '../ui/CustomSelect';
@@ -41,6 +42,19 @@ export default function CreateTripModal({ isOpen, onClose, onTripCreated }) {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
 
   useEffect(() => {
     if (isOpen) {
@@ -93,7 +107,7 @@ export default function CreateTripModal({ isOpen, onClose, onTripCreated }) {
     label: `${d.name} (${d.region || d.country})`
   }));
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '640px', width: '92%' }}>
         <div className="modal-header">
@@ -229,6 +243,7 @@ export default function CreateTripModal({ isOpen, onClose, onTripCreated }) {
           </button>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

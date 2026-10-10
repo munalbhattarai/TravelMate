@@ -3,6 +3,40 @@ import { getAccessToken, getRefreshToken, setTokens, clearTokens } from '../util
 
 const API_BASE = '/api/v1';
 
+let refreshPromise = null;
+
+async function doRefreshToken() {
+  const refresh = getRefreshToken();
+  if (!refresh) {
+    throw new Error('No refresh token available');
+  }
+
+  const res = await fetch(`${API_BASE}/auth/refresh/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh }),
+  });
+
+  if (res.ok) {
+    const data = await res.json();
+    setTokens(data.access, data.refresh || refresh);
+    return data.access;
+  } else {
+    clearTokens();
+    window.dispatchEvent(new CustomEvent('auth:logout'));
+    throw new Error('Refresh token invalid or expired');
+  }
+}
+
+function getRefreshedToken() {
+  if (!refreshPromise) {
+    refreshPromise = doRefreshToken().finally(() => {
+      refreshPromise = null;
+    });
+  }
+  return refreshPromise;
+}
+
 async function request(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`;
   const headers = {
@@ -18,26 +52,19 @@ async function request(endpoint, options = {}) {
   let response = await fetch(url, { ...options, headers });
 
   // Handle Token Refresh on 401 Unauthorized
-  if (response.status === 401 && getRefreshToken()) {
+  if (
+    response.status === 401 &&
+    getRefreshToken() &&
+    !options._isRetry &&
+    !endpoint.includes('/auth/login') &&
+    !endpoint.includes('/auth/refresh')
+  ) {
     try {
-      const refreshRes = await fetch(`${API_BASE}/auth/refresh/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh: getRefreshToken() }),
-      });
-
-      if (refreshRes.ok) {
-        const data = await refreshRes.json();
-        setTokens(data.access, getRefreshToken());
-        headers['Authorization'] = `Bearer ${data.access}`;
-        response = await fetch(url, { ...options, headers });
-      } else {
-        clearTokens();
-        window.dispatchEvent(new CustomEvent('auth:logout'));
-      }
+      const newAccessToken = await getRefreshedToken();
+      headers['Authorization'] = `Bearer ${newAccessToken}`;
+      response = await fetch(url, { ...options, headers, _isRetry: true });
     } catch {
-      clearTokens();
-      window.dispatchEvent(new CustomEvent('auth:logout'));
+      // Refresh failed; clearTokens & auth:logout already triggered
     }
   }
 

@@ -3,6 +3,8 @@ from rest_framework import serializers
 
 class TripSerializer(serializers.ModelSerializer):
     creator = serializers.ReadOnlyField(source="creator.username")
+    creator_id = serializers.ReadOnlyField(source="creator.id")
+    creator_role = serializers.ReadOnlyField(source="creator.role")
     destination_name = serializers.ReadOnlyField(source="destination.name")
     destination_latitude = serializers.ReadOnlyField(source="destination.latitude")
     destination_longitude = serializers.ReadOnlyField(source="destination.longitude")
@@ -17,6 +19,8 @@ class TripSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "creator",
+            "creator_id",
+            "creator_role",
             "destination",
             "destination_name",
             "destination_latitude",
@@ -40,6 +44,8 @@ class TripSerializer(serializers.ModelSerializer):
         read_only_fields = (
             "id",
             "creator",
+            "creator_id",
+            "creator_role",
             "status",
             "created_at",
             "updated_at",
@@ -47,6 +53,8 @@ class TripSerializer(serializers.ModelSerializer):
 
 class TripMembershipSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source="user.username")
+    user_id = serializers.ReadOnlyField(source="user.id")
+    user_role = serializers.ReadOnlyField(source="user.role")
     trip = serializers.ReadOnlyField(source="trip_id")
 
     class Meta:
@@ -55,6 +63,8 @@ class TripMembershipSerializer(serializers.ModelSerializer):
             "id",
             "trip",
             "user",
+            "user_id",
+            "user_role",
             "status",
             "joined_at",
             "created_at",
@@ -64,6 +74,8 @@ class TripMembershipSerializer(serializers.ModelSerializer):
             "id",
             "trip",
             "user",
+            "user_id",
+            "user_role",
             "status",
             "joined_at",
             "created_at",

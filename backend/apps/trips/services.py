@@ -29,11 +29,28 @@ def request_to_join(*, trip, user):
             "You already have a membership record for this trip."
         )
 
-    return TripMembership.objects.create(
+    membership = TripMembership.objects.create(
         trip=trip,
         user=user,
         status=TripMembership.Status.PENDING,
     )
+
+    try:
+        send_notification(
+            user=trip.creator,
+            type="request_received",
+            payload={
+                "trip_id": trip.id,
+                "trip_title": trip.title,
+                "applicant": user.username,
+                "applicant_id": user.id,
+                "message": f"@{user.username} requested to join '{trip.title}'.",
+            },
+        )
+    except Exception:
+        pass
+
+    return membership
 
     
 @transaction.atomic
@@ -87,7 +104,11 @@ def accept_membership(*, membership, accepted_by):
     send_notification(
         user=membership.user,
         type="request_accepted",
-        payload={"trip_id": trip.id, "trip_title": trip.title},
+        payload={
+            "trip_id": trip.id,
+            "trip_title": trip.title,
+            "message": f"Your request to join '{trip.title}' was accepted! Welcome aboard.",
+        },
     )
 
     return membership
@@ -147,7 +168,11 @@ def reject_membership(*, membership, rejected_by):
     send_notification(
         user=membership.user,
         type="request_rejected",
-        payload={"trip_id": trip.id, "trip_title": trip.title},
+        payload={
+            "trip_id": trip.id,
+            "trip_title": trip.title,
+            "message": f"Your request to join '{trip.title}' was declined.",
+        },
     )
 
     return membership

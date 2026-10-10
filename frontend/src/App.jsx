@@ -29,13 +29,24 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <Layout currentRoute={route} onNavigate={(r) => { setRoute(r); setSelectedTripId(null); }}>
+      <Layout 
+        currentRoute={route} 
+        onNavigate={(r, tripId = null) => { 
+          if (tripId) {
+            setSelectedTripId(tripId);
+            setRoute('trip-detail');
+          } else {
+            setRoute(r);
+            setSelectedTripId(null);
+          }
+        }}
+      >
         {route === 'home' && <Home onNavigate={setRoute} />}
         {route === 'explore' && <ExploreTrips onSelectTrip={handleSelectTrip} />}
         {route === 'matches' && <MatchesPage />}
         {route === 'profile' && <ProfilePage onNavigateTrip={handleSelectTrip} />}
         {route === 'trip-detail' && selectedTripId && (
-          <TripDetailPage tripId={selectedTripId} onBack={() => setRoute('explore')} />
+          <TripDetailPage tripId={selectedTripId} onBack={() => setRoute('explore')} onNavigate={setRoute} />
         )}
         {route === 'login' && (
           <div className="auth-page-wrap">

@@ -5,13 +5,29 @@ export default function TripChat({ tripId, currentUser }) {
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState('');
   const [loading, setLoading] = useState(true);
-  const endRef = useRef(null);
+  const bodyRef = useRef(null);
+  const initialLoaded = useRef(false);
+
+  const scrollToBottom = (smooth = false) => {
+    if (bodyRef.current) {
+      bodyRef.current.scrollTo({
+        top: bodyRef.current.scrollHeight,
+        behavior: smooth ? 'smooth' : 'auto',
+      });
+    }
+  };
 
   const loadMessages = async () => {
     try {
       const res = await chatApi.getTripMessages(tripId);
-      const list = res.results || res || [];
-      setMessages([...list].reverse());
+      const list = (res.results || res || []).slice().reverse();
+      setMessages((prev) => {
+        const isIdentical =
+          prev.length === list.length &&
+          (prev.length === 0 || prev[prev.length - 1]?.id === list[list.length - 1]?.id);
+        if (isIdentical) return prev;
+        return list;
+      });
     } catch {
       // offline/fallback
     } finally {
@@ -21,12 +37,24 @@ export default function TripChat({ tripId, currentUser }) {
 
   useEffect(() => {
     loadMessages();
-    const interval = setInterval(loadMessages, 4000);
+    const interval = setInterval(loadMessages, 5000);
     return () => clearInterval(interval);
   }, [tripId]);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (!initialLoaded.current && messages.length > 0) {
+      initialLoaded.current = true;
+      scrollToBottom(false);
+      return;
+    }
+
+    if (bodyRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = bodyRef.current;
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 120;
+      if (isNearBottom) {
+        scrollToBottom(true);
+      }
+    }
   }, [messages]);
 
   const handleSend = async (e) => {
@@ -39,6 +67,7 @@ export default function TripChat({ tripId, currentUser }) {
     try {
       const sent = await chatApi.sendMessage(tripId, messageText);
       setMessages((prev) => [...prev, sent]);
+      setTimeout(() => scrollToBottom(true), 50);
     } catch (err) {
       alert(err.message || 'Failed to send message');
       setNewMsg(messageText);
@@ -60,7 +89,7 @@ export default function TripChat({ tripId, currentUser }) {
         <span className="messenger-badge">End-to-End Logged</span>
       </div>
 
-      <div className="messenger-body">
+      <div className="messenger-body" ref={bodyRef}>
         {loading ? (
           <div className="chat-empty-state">Loading conversation history...</div>
         ) : messages.length === 0 ? (
@@ -89,7 +118,6 @@ export default function TripChat({ tripId, currentUser }) {
             );
           })
         )}
-        <div ref={endRef} />
       </div>
 
       <form onSubmit={handleSend} className="messenger-input-tray">

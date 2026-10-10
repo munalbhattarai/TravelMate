@@ -35,4 +35,28 @@ def send_trip_message(*, trip, sender, content):
         sender=sender,
         content=content.strip(),
     )
+
+    try:
+        from apps.notifications.services import notify
+        recipients = set()
+        if trip.creator_id != sender.id:
+            recipients.add(trip.creator)
+        for mem in TripMembership.objects.filter(trip=trip, status=TripMembership.Status.ACCEPTED).select_related("user"):
+            if mem.user_id != sender.id:
+                recipients.add(mem.user)
+        for r in recipients:
+            notify(
+                user=r,
+                type="new_message",
+                payload={
+                    "trip_id": trip.id,
+                    "trip_title": trip.title,
+                    "sender": sender.username,
+                    "preview": content.strip()[:60],
+                    "message": f"@{sender.username}: {content.strip()[:60]}",
+                },
+            )
+    except Exception:
+        pass
+
     return message

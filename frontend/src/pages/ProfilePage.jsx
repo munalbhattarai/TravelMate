@@ -189,7 +189,9 @@ export default function ProfilePage({ onNavigateTrip }) {
           <div className="profile-identity-info">
             <div className="profile-name-row">
               <h2>{profileData.display_name || user?.username}</h2>
-              <span className="profile-role-badge">🎒 {user?.role ? user.role.toUpperCase() : 'TRAVELLER'}</span>
+              <span className={`profile-role-badge role-${user?.role || 'traveller'}`}>
+                {user?.role === 'guide' ? '🏔️ CERTIFIED GUIDE' : user?.role === 'admin' ? '⚙️ SYSTEM ADMIN' : '🎒 TRAVELLER'}
+              </span>
               <span className={`verification-badge status-${userProfile.verification_status || 'not_verified'}`}>
                 {userProfile.verification_status === 'verified' ? '✓ Verified Traveler' : '🛡️ Standard Traveler'}
               </span>

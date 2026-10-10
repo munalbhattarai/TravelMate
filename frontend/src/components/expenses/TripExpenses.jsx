@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { tripApi } from '../../services/tripApi';
 
-export default function TripExpenses({ tripId, expenses = [], members = [], onExpenseAdded }) {
+export default function TripExpenses({ tripId, expenses = [], members = [], onExpenseAdded, canAdd = true }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [statementOpen, setStatementOpen] = useState(false);
   const [description, setDescription] = useState('');
@@ -12,6 +13,22 @@ export default function TripExpenses({ tripId, expenses = [], members = [], onEx
   );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!modalOpen && !statementOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setModalOpen(false);
+        setStatementOpen(false);
+      }
+    };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [modalOpen, statementOpen]);
 
   // Overall financial calculations
   const totalAmount = expenses.reduce((sum, exp) => sum + parseFloat(exp.amount || 0), 0);
@@ -140,9 +157,15 @@ export default function TripExpenses({ tripId, expenses = [], members = [], onEx
         <div className="expense-stat-card actions-card">
           <span className="stat-card-label">Expedition Expense Actions</span>
           <div className="expense-cta-row">
-            <button className="btn btn-primary btn-sm" onClick={handleOpenAddModal}>
-              + Log Expense
-            </button>
+            {canAdd ? (
+              <button className="btn btn-primary btn-sm" onClick={handleOpenAddModal}>
+                + Log Expense
+              </button>
+            ) : (
+              <button className="btn btn-primary btn-sm" disabled title="Only confirmed expedition members can log expenses" style={{ opacity: 0.6, cursor: 'not-allowed' }}>
+                🔒 Members Only
+              </button>
+            )}
             <button className="btn btn-outline btn-sm" onClick={() => setStatementOpen(true)}>
               📄 Settlement Statement
             </button>
@@ -214,9 +237,11 @@ export default function TripExpenses({ tripId, expenses = [], members = [], onEx
         {expenses.length === 0 ? (
           <div className="p-8 text-center text-muted">
             <p>No shared expenses recorded yet.</p>
-            <button className="btn btn-primary btn-sm mt-3" onClick={handleOpenAddModal}>
-              Log the First Expense
-            </button>
+            {canAdd && (
+              <button className="btn btn-primary btn-sm mt-3" onClick={handleOpenAddModal}>
+                Log the First Expense
+              </button>
+            )}
           </div>
         ) : (
           <div className="table-responsive">
@@ -247,9 +272,9 @@ export default function TripExpenses({ tripId, expenses = [], members = [], onEx
       </div>
 
       {/* Add Expense Modal */}
-      {modalOpen && (
-        <div className="modal-backdrop" onClick={() => setModalOpen(false)}>
-          <div className="modal-content modal-md" onClick={(e) => e.stopPropagation()}>
+      {modalOpen && createPortal(
+        <div className="modal-overlay" onClick={() => setModalOpen(false)}>
+          <div className="modal-content modal-md" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px', width: '92%' }}>
             <div className="modal-header">
               <h3>💰 Log Shared Expedition Expense</h3>
               <button className="modal-close-btn" onClick={() => setModalOpen(false)}>✕</button>
@@ -329,13 +354,14 @@ export default function TripExpenses({ tripId, expenses = [], members = [], onEx
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Printable Settlement Statement Modal */}
-      {statementOpen && (
-        <div className="modal-backdrop" onClick={() => setStatementOpen(false)}>
-          <div className="modal-content modal-lg printable-statement" onClick={(e) => e.stopPropagation()}>
+      {statementOpen && createPortal(
+        <div className="modal-overlay" onClick={() => setStatementOpen(false)}>
+          <div className="modal-content modal-lg printable-statement" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '800px', width: '94%' }}>
             <div className="modal-header">
               <div>
                 <h3>📜 TravelMate Nepal Expedition Settlement Statement</h3>
@@ -424,7 +450,8 @@ export default function TripExpenses({ tripId, expenses = [], members = [], onEx
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { tripApi } from '../../services/tripApi';
 
-export default function TripItinerary({ itineraries, tripId, isCreator, onRefresh }) {
+export default function TripItinerary({ itineraries, tripId, isCreator, canEdit = true, onRefresh }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [dayNumber, setDayNumber] = useState((itineraries?.length || 0) + 1);
   const [title, setTitle] = useState('');
@@ -10,6 +11,19 @@ export default function TripItinerary({ itineraries, tripId, isCreator, onRefres
   const [accommodation, setAccommodation] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!isModalOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setIsModalOpen(false);
+    };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isModalOpen]);
 
   const handleAddDay = async (e) => {
     e.preventDefault();
@@ -49,7 +63,7 @@ export default function TripItinerary({ itineraries, tripId, isCreator, onRefres
           <h3 style={{ fontSize: '1.35rem', color: 'var(--text-heading)', margin: 0 }}>📅 Expedition Timeline</h3>
           <p className="text-muted text-xs" style={{ marginTop: '0.2rem' }}>Day-by-day route, trail milestones, and planned teahouse stays</p>
         </div>
-        {tripId && (
+        {canEdit && tripId && (
           <button className="btn btn-primary btn-sm" onClick={() => setIsModalOpen(true)}>
             + Add Day Plan
           </button>
@@ -110,7 +124,7 @@ export default function TripItinerary({ itineraries, tripId, isCreator, onRefres
       )}
 
       {/* Add Day Modal */}
-      {isModalOpen && (
+      {isModalOpen && createPortal(
         <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px', width: '92%' }}>
             <div className="modal-header">
@@ -186,7 +200,8 @@ export default function TripItinerary({ itineraries, tripId, isCreator, onRefres
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

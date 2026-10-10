@@ -9,7 +9,7 @@ import ReviewModal from '../components/reviews/ReviewModal';
 import ReportModal from '../components/moderation/ReportModal';
 import TripPackingList from '../components/trip/TripPackingList';
 
-export default function TripDetailPage({ tripId, onBack }) {
+export default function TripDetailPage({ tripId, onBack, onNavigate }) {
   const { user } = useAuth();
   const [trip, setTrip] = useState(null);
   const [itineraries, setItineraries] = useState([]);
@@ -29,17 +29,45 @@ export default function TripDetailPage({ tripId, onBack }) {
       const data = await tripApi.getTrip(tripId);
       setTrip(data);
 
-      const [itinRes, expRes, memRes] = await Promise.allSettled([
+      const [itinRes, memRes] = await Promise.allSettled([
         tripApi.getItinerary(tripId),
-        tripApi.getExpenses(tripId),
         tripApi.getMemberships(tripId),
       ]);
 
-      if (itinRes.status === 'fulfilled') setItineraries(itinRes.value.results || itinRes.value || []);
-      if (expRes.status === 'fulfilled') setExpenses(expRes.value.results || expRes.value || []);
-      if (memRes.status === 'fulfilled') setMemberships(memRes.value.results || memRes.value || []);
+      if (itinRes.status === 'fulfilled') {
+        const val = itinRes.value?.results || itinRes.value;
+        setItineraries(Array.isArray(val) ? val : []);
+      }
+      if (memRes.status === 'fulfilled') {
+        const val = memRes.value?.results || memRes.value;
+        setMemberships(Array.isArray(val) ? val : []);
+      }
+
+      // Only fetch expenses if user is an accepted member, host, or admin
+      const memberList = memRes.status === 'fulfilled' ? (memRes.value?.results || memRes.value || []) : [];
+      const userIsMember = Boolean(
+        user && (
+          user.username === data?.creator ||
+          (data?.creator_id && user.id === data?.creator_id) ||
+          user.role === 'admin' ||
+          user.is_staff ||
+          (Array.isArray(memberList) && memberList.some(m => (m.user === user.username || m.user_id === user.id) && m.status === 'accepted'))
+        )
+      );
+
+      if (userIsMember) {
+        try {
+          const expRes = await tripApi.getExpenses(tripId);
+          const val = expRes?.results || expRes;
+          setExpenses(Array.isArray(val) ? val : []);
+        } catch {
+          setExpenses([]);
+        }
+      } else {
+        setExpenses([]);
+      }
     } catch (err) {
-      console.error(err);
+      console.error('Failed to load trip workspace:', err);
     } finally {
       setLoading(false);
     }
@@ -52,12 +80,26 @@ export default function TripDetailPage({ tripId, onBack }) {
   const handleRequestJoin = async () => {
     setActionMsg('');
     setActionError('');
+    if (!user) {
+      setActionError('Please sign in to send a request to join this expedition.');
+      if (onNavigate) onNavigate('login');
+      return;
+    }
     try {
       await tripApi.requestJoin(tripId);
       setActionMsg('Join request sent successfully! Waiting for host approval.');
       loadData();
     } catch (err) {
-      setActionError(err.message || 'Could not send join request.');
+      const msg = err.message || '';
+      if (msg.toLowerCase().includes('already have a membership')) {
+        setActionMsg('Your join request has been submitted and is pending host approval.');
+        loadData();
+      } else if (msg.toLowerCase().includes('authentication credentials were not provided')) {
+        setActionError('Your session has expired. Please sign in again.');
+        if (onNavigate) onNavigate('login');
+      } else {
+        setActionError(msg || 'Could not send join request.');
+      }
     }
   };
 
@@ -125,6 +167,14 @@ export default function TripDetailPage({ tripId, onBack }) {
     }
   };
 
+  const isCreator = Boolean(user && (user.username === trip?.creator || (trip?.creator_id && user.id === trip?.creator_id)));
+  const isAdmin = Boolean(user && (user.role === 'admin' || user.is_staff));
+  const myMembership = Array.isArray(memberships) ? memberships.find((m) => m.user === user?.username || (user?.id && m.user_id === user?.id)) : null;
+  const isAcceptedMember = isCreator || isAdmin || myMembership?.status === 'accepted';
+  const pendingRequests = Array.isArray(memberships) ? memberships.filter((m) => m.status === 'pending') : [];
+  const acceptedMembers = Array.isArray(memberships) ? memberships.filter((m) => m.status === 'accepted') : [];
+  const spotsLeft = Math.max(0, (trip?.max_members || 4) - acceptedMembers.length);
+
   if (loading) {
     return (
       <div className="trip-detail-loading">
@@ -145,12 +195,6 @@ export default function TripDetailPage({ tripId, onBack }) {
       </div>
     );
   }
-
-  const isCreator = user && user.username === trip.creator;
-  const myMembership = memberships.find((m) => m.user === user?.username);
-  const isAcceptedMember = isCreator || myMembership?.status === 'accepted';
-  const pendingRequests = memberships.filter((m) => m.status === 'pending');
-  const acceptedMembers = memberships.filter((m) => m.status === 'accepted');
 
   return (
     <div className="trip-detail-container">
@@ -182,6 +226,15 @@ export default function TripDetailPage({ tripId, onBack }) {
               {(trip.status || 'open').toUpperCase()}
             </span>
 
+            {!user && trip.status === 'open' && (
+              <button 
+                className="btn-join-primary" 
+                onClick={() => onNavigate ? onNavigate('login') : null}
+              >
+                🔑 Sign In to Join
+              </button>
+            )}
+
             {user && !isCreator && !myMembership && trip.status === 'open' && (
               <button className="btn-join-primary" onClick={handleRequestJoin}>
                 ✨ Request to Join Trip
@@ -189,28 +242,40 @@ export default function TripDetailPage({ tripId, onBack }) {
             )}
 
             {myMembership && !isCreator && (
-              <span className={`status-pill ${myMembership.status === 'accepted' ? 'member-confirmed' : 'member-pending'}`}>
-                {myMembership.status === 'accepted' ? '✓ Confirmed Member' : '⏳ Request Pending Approval'}
+              <span className={`status-pill ${
+                myMembership.status === 'accepted' ? 'member-confirmed' :
+                myMembership.status === 'rejected' ? 'member-declined' : 'member-pending'
+              }`}>
+                {myMembership.status === 'accepted' ? '✓ Confirmed Member' :
+                 myMembership.status === 'rejected' ? '✕ Join Request Declined' : '⏳ Request Pending Approval'}
               </span>
             )}
 
             {isCreator && (
-              <span className="status-pill creator-badge">👑 You are the Trip Leader</span>
+              <span className="status-pill creator-badge">
+                {trip.creator_role === 'guide' ? '🏔️ Certified Guide (Host)' : '👑 You are the Trip Leader'}
+              </span>
             )}
 
-            {isCreator && (trip.status === 'open' || trip.status === 'full') && (
+            {isAdmin && !isCreator && (
+              <span className="status-pill admin-badge" style={{ background: 'rgba(99, 102, 241, 0.12)', color: '#4f46e5', borderColor: '#a5b4fc', fontWeight: 600 }}>
+                🛡️ Admin Superuser
+              </span>
+            )}
+
+            {(isCreator || isAdmin) && (trip.status === 'open' || trip.status === 'full') && (
               <button className="btn-lifecycle btn-lifecycle-start" onClick={handleStartTrip}>
                 🚀 Start Expedition
               </button>
             )}
 
-            {isCreator && trip.status === 'ongoing' && (
+            {(isCreator || isAdmin) && trip.status === 'ongoing' && (
               <button className="btn-lifecycle btn-lifecycle-complete" onClick={handleCompleteTrip}>
                 🏁 Mark Completed
               </button>
             )}
 
-            {isCreator && trip.status !== 'completed' && trip.status !== 'cancelled' && (
+            {(isCreator || isAdmin) && trip.status !== 'completed' && trip.status !== 'cancelled' && (
               <button className="btn-lifecycle btn-lifecycle-cancel" onClick={handleCancelTrip}>
                 ✕ Cancel Trip
               </button>
@@ -238,8 +303,12 @@ export default function TripDetailPage({ tripId, onBack }) {
               {trip.creator ? trip.creator.charAt(0).toUpperCase() : 'H'}
             </div>
             <div className="host-text-details">
-              <span className="host-label">Organized by</span>
-              <span className="host-name">{trip.creator}</span>
+              <span className="host-label">
+                {trip.creator_role === 'guide' ? 'Expedition Guide & Host' : 'Organized by'}
+              </span>
+              <span className="host-name">
+                {trip.creator} {trip.creator_role === 'guide' && '🏔️'}
+              </span>
             </div>
           </div>
         </div>
@@ -249,114 +318,133 @@ export default function TripDetailPage({ tripId, onBack }) {
           <p>{trip.description || 'Join this journey through the mountains, cultural heritage trails, and landscapes of Nepal. Coordinate gear, itineraries, and shared experiences with travel companions.'}</p>
         </div>
 
-        {/* 6-Card High Density Stat Grid */}
-        <div className="trip-dossier-stats-grid">
-          <div className="dossier-stat-tile">
-            <div className="stat-tile-icon">📅</div>
-            <div className="stat-tile-info">
-              <span className="stat-tile-label">Expedition Dates</span>
-              <span className="stat-tile-val">{trip.start_date || 'Flexible'} → {trip.end_date || 'Flexible'}</span>
+        {/* Streamlined Expedition Highlights Bar (3 Balanced Metric Pillars + Logistics Ribbon) */}
+        <div className="trip-expedition-brief">
+          <div className="brief-metrics-grid">
+            <div className="brief-metric-tile">
+              <div className="brief-icon-box">📅</div>
+              <div className="brief-metric-data">
+                <span className="brief-label">EXPEDITION DATES</span>
+                <span className="brief-value">
+                  {trip.start_date ? `${trip.start_date} → ${trip.end_date}` : 'Flexible Dates'}
+                </span>
+                <span className="brief-subtext">Himalayan Trek Window</span>
+              </div>
+            </div>
+
+            <div className="brief-metric-tile">
+              <div className="brief-icon-box">💰</div>
+              <div className="brief-metric-data">
+                <span className="brief-label">ESTIMATED BUDGET</span>
+                <span className="brief-value">
+                  NPR {Number(trip.budget || 0).toLocaleString()}
+                </span>
+                <span className="brief-subtext">Approx per traveler</span>
+              </div>
+            </div>
+
+            <div className="brief-metric-tile">
+              <div className="brief-icon-box">👥</div>
+              <div className="brief-metric-data">
+                <span className="brief-label">CONFIRMED COMPANIONS</span>
+                <span className="brief-value">
+                  {acceptedMembers.length} / {trip.max_members || 4} Confirmed
+                </span>
+                <span className="brief-subtext">
+                  {spotsLeft > 0 ? `${spotsLeft} open spot${spotsLeft === 1 ? '' : 's'} available` : 'Capacity reached'}
+                </span>
+              </div>
             </div>
           </div>
 
-          <div className="dossier-stat-tile">
-            <div className="stat-tile-icon">💰</div>
-            <div className="stat-tile-info">
-              <span className="stat-tile-label">Estimated Budget</span>
-              <span className="stat-tile-val">NPR {Number(trip.budget || 0).toLocaleString()}</span>
-            </div>
-          </div>
-
-          <div className="dossier-stat-tile">
-            <div className="stat-tile-icon">👥</div>
-            <div className="stat-tile-info">
-              <span className="stat-tile-label">Members Confirmed</span>
-              <span className="stat-tile-val">{acceptedMembers.length} / {trip.max_members || 4} Confirmed</span>
-            </div>
-          </div>
-
-          <div className="dossier-stat-tile">
-            <div className="stat-tile-icon">🎒</div>
-            <div className="stat-tile-info">
-              <span className="stat-tile-label">Travel Style</span>
-              <span className="stat-tile-val">
-                {trip.travel_style ? trip.travel_style.charAt(0).toUpperCase() + trip.travel_style.slice(1) : 'Adventure'}
+          {/* Integrated Logistics Badges Strip */}
+          <div className="brief-logistics-strip">
+            <div className="logistics-pills-row">
+              <span className="brief-tag">
+                <span className="tag-ico">🎒</span> Travel Style: <strong>{trip.travel_style ? trip.travel_style.charAt(0).toUpperCase() + trip.travel_style.slice(1) : 'Adventure'}</strong>
               </span>
-            </div>
-          </div>
-
-          <div className="dossier-stat-tile">
-            <div className="stat-tile-icon">🚗</div>
-            <div className="stat-tile-info">
-              <span className="stat-tile-label">Transport</span>
-              <span className="stat-tile-val">
-                {trip.transport ? trip.transport.charAt(0).toUpperCase() + trip.transport.slice(1) : 'Tourist Bus'}
+              <span className="brief-tag">
+                <span className="tag-ico">🚌</span> Transport: <strong>{trip.transport ? trip.transport.charAt(0).toUpperCase() + trip.transport.slice(1) : 'Tourist Bus'}</strong>
               </span>
-            </div>
-          </div>
-
-          <div className="dossier-stat-tile">
-            <div className="stat-tile-icon">🏡</div>
-            <div className="stat-tile-info">
-              <span className="stat-tile-label">Accommodation</span>
-              <span className="stat-tile-val">
-                {trip.accommodation ? trip.accommodation.charAt(0).toUpperCase() + trip.accommodation.slice(1) : 'Teahouse / Hotel'}
+              <span className="brief-tag">
+                <span className="tag-ico">🏡</span> Stay: <strong>{trip.accommodation ? trip.accommodation.charAt(0).toUpperCase() + trip.accommodation.slice(1) : 'Teahouse / Hotel'}</strong>
               </span>
+              {trip.languages && (
+                <span className="brief-tag">
+                  <span className="tag-ico">🗣️</span> Languages: <strong>{trip.languages}</strong>
+                </span>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Sleek Workspace Navigation Tabs */}
+      {/* Modern Workspace Navigation Tabs */}
       <div className="workspace-tabs-wrapper">
-        <div className="workspace-tabs-pill-bar">
+        <div className="workspace-tabs-bar">
           <button 
             className={`ws-tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
             onClick={() => setActiveTab('overview')}
+            title="Overview & Confirmed Members"
           >
             <span className="ws-tab-icon">📋</span>
-            <span>Overview & Members</span>
+            <span>Overview</span>
             <span className="ws-tab-counter">{acceptedMembers.length}</span>
           </button>
 
           <button 
             className={`ws-tab-btn ${activeTab === 'itinerary' ? 'active' : ''}`}
             onClick={() => setActiveTab('itinerary')}
+            title="Daily Itinerary Timeline"
           >
             <span className="ws-tab-icon">📅</span>
-            <span>Itinerary Timeline</span>
+            <span>Itinerary</span>
             <span className="ws-tab-counter">{itineraries.length}</span>
           </button>
 
+          {/* Companion Chat Tab (Always visible, marked locked for non-members) */}
           <button 
-            className={`ws-tab-btn ${activeTab === 'chat' ? 'active' : ''}`}
+            className={`ws-tab-btn ws-tab-chat ${activeTab === 'chat' ? 'active' : ''}`}
             onClick={() => setActiveTab('chat')}
+            title="Live Companion Group Chat"
           >
-            <span className="ws-tab-icon">💬</span>
-            <span>Group Chat Workspace</span>
-            <span className="ws-tab-pulse-dot"></span>
+            <span className="ws-tab-icon">{isAcceptedMember ? '💬' : '🔒'}</span>
+            <span>Chat</span>
+            {!isAcceptedMember ? (
+              <span className="ws-tab-lock-badge">Members Only</span>
+            ) : (
+              <span className="ws-tab-pulse-dot"></span>
+            )}
           </button>
 
+          {/* Expenses & Settlement Tab (Always visible, marked locked for non-members) */}
           <button 
             className={`ws-tab-btn ${activeTab === 'expenses' ? 'active' : ''}`}
             onClick={() => setActiveTab('expenses')}
+            title="Expenses & Shared Settlement"
           >
-            <span className="ws-tab-icon">💳</span>
-            <span>Expenses & Settlement</span>
-            <span className="ws-tab-counter">{expenses.length}</span>
+            <span className="ws-tab-icon">{isAcceptedMember ? '💳' : '🔒'}</span>
+            <span>Expenses</span>
+            {isAcceptedMember ? (
+              <span className="ws-tab-counter">{expenses.length}</span>
+            ) : (
+              <span className="ws-tab-lock-badge">Members Only</span>
+            )}
           </button>
 
           <button 
             className={`ws-tab-btn ${activeTab === 'map' ? 'active' : ''}`}
             onClick={() => setActiveTab('map')}
+            title="Interactive Route & Nepal Map"
           >
             <span className="ws-tab-icon">🗺️</span>
-            <span>Route & Nepal Map</span>
+            <span>Route Map</span>
           </button>
 
           <button 
             className={`ws-tab-btn ${activeTab === 'packing' ? 'active' : ''}`}
             onClick={() => setActiveTab('packing')}
+            title="Gear Checklist & Packing Guide"
           >
             <span className="ws-tab-icon">🎒</span>
             <span>Gear Checklist</span>
@@ -384,7 +472,9 @@ export default function TripDetailPage({ tripId, onBack }) {
                     </div>
                     <div className="member-meta">
                       <span className="member-username">{trip.creator}</span>
-                      <span className="member-role-tag">👑 Trip Organizer & Host</span>
+                      <span className="member-role-tag">
+                        {trip.creator_role === 'guide' ? '🏔️ Certified Trek Guide & Host' : '👑 Trip Organizer & Host'}
+                      </span>
                     </div>
                     <span className="member-verified-badge">✓ Verified Host</span>
                   </div>
@@ -397,15 +487,17 @@ export default function TripDetailPage({ tripId, onBack }) {
                       </div>
                       <div className="member-meta">
                         <span className="member-username">{m.user}</span>
-                        <span className="member-role-tag">🎒 Confirmed Companion</span>
+                        <span className="member-role-tag">
+                          {m.user_role === 'guide' ? '🏔️ Licensed Guide' : '🎒 Confirmed Companion'}
+                        </span>
                       </div>
                       <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center' }}>
                         <span className="member-status-ok">Ready to Trek</span>
-                        {user && user.username !== m.user && (
+                        {user && user.username !== m.user && trip.status === 'completed' && (
                           <button
                             className="btn btn-outline btn-xs"
                             onClick={() => {
-                              setMemberToReview({ id: m.user_id, username: m.user });
+                              setMemberToReview({ id: m.user_id || m.id, username: m.user });
                               setReviewModalOpen(true);
                             }}
                             title="Review Companion"
@@ -418,7 +510,7 @@ export default function TripDetailPage({ tripId, onBack }) {
                           <button
                             className="btn-icon-report"
                             onClick={() => {
-                              setReportTarget({ type: 'user', id: m.user_id, name: m.user });
+                              setReportTarget({ type: 'user', id: m.user_id || m.id, name: m.user });
                               setReportModalOpen(true);
                             }}
                             title="Report User for Safety"
@@ -496,20 +588,83 @@ export default function TripDetailPage({ tripId, onBack }) {
         )}
 
         {activeTab === 'itinerary' && (
-          <TripItinerary itineraries={itineraries} />
+          <TripItinerary 
+            itineraries={itineraries}
+            tripId={trip.id}
+            isCreator={isCreator}
+            canEdit={isAcceptedMember}
+            onRefresh={loadData}
+          />
         )}
 
         {activeTab === 'chat' && (
-          <TripChat tripId={trip.id} currentUser={user} />
+          !isAcceptedMember ? (
+            <div className="workspace-locked-card">
+              <div className="locked-icon-bubble">🔒</div>
+              <h3>Companion Chat is Members-Only</h3>
+              <p className="locked-lead-text">
+                {!user 
+                  ? 'Sign in to your TravelMate account and join this expedition to participate in group chat and coordinate trail logistics with fellow companions.'
+                  : myMembership?.status === 'pending'
+                  ? 'Your join request has been submitted and is awaiting approval by the trip leader. The group chat will unlock automatically once your request is accepted!'
+                  : myMembership?.status === 'rejected'
+                  ? 'Your request to join this trip was declined by the host.'
+                  : 'Join this expedition to chat in real-time, share gear recommendations, and coordinate trail details with confirmed companions.'}
+              </p>
+              <div className="locked-action-group">
+                {!user && onNavigate && (
+                  <button className="btn btn-primary" onClick={() => onNavigate('login')}>
+                    🔑 Sign In to Join
+                  </button>
+                )}
+                {user && !myMembership && trip.status === 'open' && (
+                  <button className="btn btn-primary" onClick={handleRequestJoin}>
+                    ✨ Request to Join Trip
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <TripChat tripId={trip.id} currentUser={user} />
+          )
         )}
 
         {activeTab === 'expenses' && (
-          <TripExpenses
-            expenses={expenses}
-            tripId={trip.id}
-            members={acceptedMembers}
-            onExpenseAdded={loadData}
-          />
+          !isAcceptedMember ? (
+            <div className="workspace-locked-card">
+              <div className="locked-icon-bubble">🔒</div>
+              <h3>Expenses & Settlement is Members-Only</h3>
+              <p className="locked-lead-text">
+                {!user 
+                  ? 'Sign in to your TravelMate account and join this expedition to access shared cost tracking, itemized bills, and peer expense settlements.'
+                  : myMembership?.status === 'pending'
+                  ? 'Your join request is awaiting host approval. Once accepted, shared expense logs and settlement calculations will unlock automatically!'
+                  : myMembership?.status === 'rejected'
+                  ? 'Your request to join this trip was declined by the host.'
+                  : 'Shared expense logs, itemized receipts, and cost-splitting calculations are reserved for confirmed companions to protect traveler financial privacy.'}
+              </p>
+              <div className="locked-action-group">
+                {!user && onNavigate && (
+                  <button className="btn btn-primary" onClick={() => onNavigate('login')}>
+                    🔑 Sign In to Join
+                  </button>
+                )}
+                {user && !myMembership && trip.status === 'open' && (
+                  <button className="btn btn-primary" onClick={handleRequestJoin}>
+                    ✨ Request to Join Trip
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <TripExpenses
+              expenses={expenses}
+              tripId={trip.id}
+              members={acceptedMembers}
+              onExpenseAdded={loadData}
+              canAdd={isAcceptedMember}
+            />
+          )
         )}
 
         {activeTab === 'map' && (

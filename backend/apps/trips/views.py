@@ -29,7 +29,7 @@ class TripViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_permissions(self):
-        if self.action in ["list", "retrieve"]:
+        if self.action in ["list", "retrieve", "memberships"]:
             return [permissions.AllowAny()]
         if self.action in [
             "update",
@@ -252,11 +252,11 @@ class TripViewSet(viewsets.ModelViewSet):
 
 class ItineraryViewSet(viewsets.ModelViewSet):
     serializer_class = ItinerarySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     def get_permissions(self):
         if self.action in ["create", "update", "partial_update", "destroy", "reorder"]:
             return [permissions.IsAuthenticated(), IsTripMember()]
-        return [permissions.IsAuthenticated()]
+        return [permissions.AllowAny()]
 
     ordering = ["day_number"]
 

@@ -1,18 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import NotificationCenter from '../notifications/NotificationCenter';
 import SafetyCenterModal from '../moderation/SafetyCenterModal';
 import ReportModal from '../moderation/ReportModal';
+import { notificationApi } from '../../services/notificationApi';
 
 export default function Navbar({ currentRoute, onNavigate }) {
   const { user, logout } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [safetyModalOpen, setSafetyModalOpen] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const notifRef = useRef(null);
+
+  const fetchUnreadCount = async () => {
+    if (!user) return;
+    try {
+      const res = await notificationApi.getNotifications(true);
+      const items = res.results || res || [];
+      setUnreadCount(Array.isArray(items) ? items.length : 0);
+    } catch {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 12000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  // Click outside to close notifications dropdown
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setShowNotifications(false);
+      }
+    }
+    if (showNotifications) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [showNotifications]);
 
   return (
-    <header className="floating-navbar-wrapper">
-      <div className="floating-navbar-pill">
+    <header className="top-site-navbar">
+      <div className="top-site-navbar-container">
         <div className="nav-brand" onClick={() => onNavigate('home')}>
           <span className="brand-icon">🧭</span>
           <span className="brand-title">TravelMate</span>
@@ -39,14 +76,6 @@ export default function Navbar({ currentRoute, onNavigate }) {
               Partner Matches
             </button>
           )}
-          {user && (
-            <button
-              className={`nav-item ${currentRoute === 'profile' ? 'active' : ''}`}
-              onClick={() => onNavigate('profile')}
-            >
-              My Profile
-            </button>
-          )}
           <button
             className="nav-item nav-safety-pill"
             onClick={() => setSafetyModalOpen(true)}
@@ -59,7 +88,7 @@ export default function Navbar({ currentRoute, onNavigate }) {
         <div className="nav-actions">
           {user ? (
             <div className="user-nav-capsule">
-              <div className="nav-notification-wrapper">
+              <div className="nav-notification-wrapper" ref={notifRef}>
                 <button
                   className="nav-bell-btn"
                   onClick={() => setShowNotifications(!showNotifications)}
@@ -67,10 +96,20 @@ export default function Navbar({ currentRoute, onNavigate }) {
                   aria-label="Notifications"
                 >
                   🔔
+                  {unreadCount > 0 && (
+                    <span className="notif-badge-pill">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                  )}
                 </button>
 
                 {showNotifications && (
-                  <NotificationCenter onClose={() => setShowNotifications(false)} />
+                  <NotificationCenter 
+                    onClose={() => setShowNotifications(false)} 
+                    onUpdateCount={fetchUnreadCount}
+                    onNavigateTrip={(tripId) => {
+                      if (onNavigate) onNavigate('trip-detail', tripId);
+                      setShowNotifications(false);
+                    }}
+                  />
                 )}
               </div>
 
@@ -84,6 +123,16 @@ export default function Navbar({ currentRoute, onNavigate }) {
                   {user.username ? user.username.charAt(0).toUpperCase() : 'U'}
                 </span>
                 <span className="user-name-text">{user.username}</span>
+                {user.role === 'guide' && (
+                  <span className="nav-role-badge" title="Licensed Trek Guide" style={{ fontSize: '0.68rem', background: '#dcfce7', color: '#15803d', padding: '0.15rem 0.45rem', borderRadius: '10px', fontWeight: 700, marginLeft: '0.2rem' }}>
+                    🏔️ Guide
+                  </span>
+                )}
+                {user.role === 'admin' && (
+                  <span className="nav-role-badge" title="System Administrator" style={{ fontSize: '0.68rem', background: '#ede9fe', color: '#6d28d9', padding: '0.15rem 0.45rem', borderRadius: '10px', fontWeight: 700, marginLeft: '0.2rem' }}>
+                    ⚙️ Admin
+                  </span>
+                )}
               </div>
 
               <button className="nav-logout-btn" onClick={logout}>

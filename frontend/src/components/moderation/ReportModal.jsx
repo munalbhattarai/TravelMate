@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { moderationApi } from '../../services/moderationApi';
 import CustomSelect from '../ui/CustomSelect';
 
@@ -18,6 +19,19 @@ export default function ReportModal({ isOpen, onClose, targetType = 'user', targ
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -50,7 +64,7 @@ export default function ReportModal({ isOpen, onClose, targetType = 'user', targ
     }
   };
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px', width: '92%' }}>
         <div className="modal-header">
@@ -109,6 +123,7 @@ export default function ReportModal({ isOpen, onClose, targetType = 'user', targ
           </form>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

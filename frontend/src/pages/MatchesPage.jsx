@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { matchingApi } from '../services/matchingApi';
 import { tripApi } from '../services/tripApi';
 import { useAuth } from '../hooks/useAuth';
@@ -13,6 +14,19 @@ export default function MatchesPage() {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedBreakdown, setSelectedBreakdown] = useState(null);
+
+  useEffect(() => {
+    if (!selectedBreakdown) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setSelectedBreakdown(null);
+    };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedBreakdown]);
 
   useEffect(() => {
     async function loadTrips() {
@@ -120,7 +134,7 @@ export default function MatchesPage() {
         </div>
       )}
 
-      {selectedBreakdown && (
+      {selectedBreakdown && createPortal(
         <div className="modal-overlay" onClick={() => setSelectedBreakdown(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '640px', width: '92%' }}>
             <button className="btn-icon-close" onClick={() => setSelectedBreakdown(null)}>✕</button>
@@ -130,7 +144,8 @@ export default function MatchesPage() {
               overallScore={selectedBreakdown.score}
             />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

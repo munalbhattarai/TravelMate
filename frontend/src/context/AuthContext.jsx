@@ -23,6 +23,12 @@ export function AuthProvider({ children }) {
       setLoading(false);
     }
     loadUser();
+
+    const handleLogoutEvent = () => {
+      setUser(null);
+    };
+    window.addEventListener('auth:logout', handleLogoutEvent);
+    return () => window.removeEventListener('auth:logout', handleLogoutEvent);
   }, []);
 
   const login = async (username, password) => {
