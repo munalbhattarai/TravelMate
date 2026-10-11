@@ -38,6 +38,8 @@
   - In-app notification popover with unread counters and instant read tracking.
 - **🛡️ Trust, Safety & Emergency Directory (FR-10)**
   - In-app Safety Center with 24/7 Nepal SOS hotlines (Tourist Police `1144`, HRA `+977-1-4440292`, Police `100`), altitude sickness (AMS) protocols, and moderation reporting.
+- **⚙️ Central Administrative Operations Deck (FR-11)**
+  - Unified frontend dashboard with KPI telemetry, user & guide governance, guide license verification pipeline, safety report triage, and expedition lifecycle override controls.
 
 ---
 
