@@ -6,6 +6,7 @@ import ExploreTrips from './pages/ExploreTrips';
 import MatchesPage from './pages/MatchesPage';
 import TripDetailPage from './pages/TripDetailPage';
 import ProfilePage from './pages/ProfilePage';
+import AdminDashboard from './pages/AdminDashboard';
 import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
 import './App.css';
@@ -45,6 +46,9 @@ export default function App() {
         {route === 'explore' && <ExploreTrips onSelectTrip={handleSelectTrip} />}
         {route === 'matches' && <MatchesPage />}
         {route === 'profile' && <ProfilePage onNavigateTrip={handleSelectTrip} />}
+        {route === 'admin' && (
+          <AdminDashboard onNavigate={setRoute} onSelectTrip={handleSelectTrip} />
+        )}
         {route === 'trip-detail' && selectedTripId && (
           <TripDetailPage tripId={selectedTripId} onBack={() => setRoute('explore')} onNavigate={setRoute} />
         )}
