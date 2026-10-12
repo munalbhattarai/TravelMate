@@ -11,7 +11,7 @@ export default function Layout({ children, currentRoute, onNavigate }) {
       <main className={`main-content-wrapper ${isAuthPage ? 'auth-main-wrapper' : ''}`}>
         {children}
       </main>
-      {!isAuthPage && <Footer />}
+      {!isAuthPage && <Footer onNavigate={onNavigate} />}
     </div>
   );
 }
