@@ -156,8 +156,10 @@ export default function Navbar({ currentRoute, onNavigate }) {
                   logout();
                   if (onNavigate) onNavigate('login');
                 }}
+                title="Log out of your account"
               >
-                Logout
+                <span className="logout-icon">⎋</span>
+                <span>Logout</span>
               </button>
             </div>
           ) : (

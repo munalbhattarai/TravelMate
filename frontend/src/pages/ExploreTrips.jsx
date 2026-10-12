@@ -7,12 +7,11 @@ import CreateTripModal from '../components/trip/CreateTripModal';
 import NepalTripMap from '../components/map/NepalTripMap';
 
 const QUICK_CATEGORIES = [
-  { id: 'all', label: 'All Expeditions', icon: '🧭' },
-  { id: 'mountain', label: 'High Mountain Treks', icon: '🏔️', query: 'Annapurna' },
-  { id: 'lakes', label: 'Lakes & Valleys', icon: '🚣', query: 'Pokhara' },
-  { id: 'cultural', label: 'Cultural Heritage', icon: '🛕', travel_style: 'cultural' },
-  { id: 'nature', label: 'Wilderness & Nature', icon: '🌲', travel_style: 'nature' },
-  { id: 'relaxation', label: 'Lakeside Leisure', icon: '🌅', travel_style: 'relaxation' },
+  { id: 'all', label: 'All Trips', icon: '🧭', style: '' },
+  { id: 'mountain', label: 'Mountain Treks', icon: '🏔️', style: 'adventure' },
+  { id: 'cultural', label: 'Culture & Heritage', icon: '🛕', style: 'cultural' },
+  { id: 'nature', label: 'Nature & Safari', icon: '🌲', style: 'nature' },
+  { id: 'relaxation', label: 'Relaxation & Leisure', icon: '🌅', style: 'relaxation' },
 ];
 
 export default function ExploreTrips({ onSelectTrip }) {
@@ -42,24 +41,19 @@ export default function ExploreTrips({ onSelectTrip }) {
 
   const handleFilterChange = (key, val) => {
     setFilters((prev) => ({ ...prev, [key]: val }));
-    setActiveCategory('custom');
+    if (key === 'travel_style' && !val) {
+      setActiveCategory('all');
+    }
   };
 
   const handleCategoryClick = (cat) => {
     setActiveCategory(cat.id);
-    if (cat.id === 'all') {
-      const reset = { query: '', travel_style: '', status: 'open' };
-      setFilters(reset);
-      loadTrips(reset);
-    } else if (cat.query) {
-      const updated = { query: cat.query, travel_style: '', status: 'open' };
-      setFilters(updated);
-      loadTrips(updated);
-    } else if (cat.travel_style) {
-      const updated = { query: '', travel_style: cat.travel_style, status: 'open' };
-      setFilters(updated);
-      loadTrips(updated);
-    }
+    const updated = {
+      ...filters,
+      travel_style: cat.style || '',
+    };
+    setFilters(updated);
+    loadTrips(updated);
   };
 
   const handleClearFilters = () => {
@@ -75,11 +69,11 @@ export default function ExploreTrips({ onSelectTrip }) {
       <div className="explore-hero-masthead">
         <div className="explore-hero-left">
           <div className="explore-eyebrow-tag">
-            <span>🇳🇵</span> HIMALAYAN EXPEDITION DISCOVERY
+            <span>🇳🇵</span> EXPLORE NEPAL TRIPS
           </div>
-          <h1 className="explore-main-title">Find Your Next Himalayan Expedition</h1>
+          <h1 className="explore-main-title">Find Your Next Trip in Nepal</h1>
           <p className="explore-main-subtitle">
-            Connect with verified trekking companions across Pokhara, Annapurna, Everest Base Camp, and remote sacred valleys.
+            Connect with friendly travel companions for treks, tours, road trips, and weekend getaways across Nepal.
           </p>
         </div>
 
@@ -102,7 +96,7 @@ export default function ExploreTrips({ onSelectTrip }) {
           </div>
 
           <button className="btn-create-expedition" onClick={() => setIsCreateOpen(true)}>
-            + Host Expedition
+            + Create Trip
           </button>
         </div>
       </div>
@@ -134,12 +128,11 @@ export default function ExploreTrips({ onSelectTrip }) {
       {/* Results Header Meta */}
       <div className="explore-results-meta">
         <div className="results-count-text">
-          <span>Showing <strong>{trips.length}</strong> active expeditions across Nepal</span>
+          <span>Showing <strong>{trips.length}</strong> trips across Nepal</span>
           {filters.query && <span className="query-pill-tag">Keyword: "{filters.query}"</span>}
-          {filters.travel_style && <span className="query-pill-tag">Style: {filters.travel_style}</span>}
         </div>
         {viewMode === 'map' && (
-          <span className="map-hint-pill">📍 Click map markers to inspect expedition waypoints</span>
+          <span className="map-hint-pill">📍 Click map markers to inspect trip routes</span>
         )}
       </div>
 
@@ -147,21 +140,21 @@ export default function ExploreTrips({ onSelectTrip }) {
       {loading ? (
         <div className="explore-loading-state">
           <div className="explore-spinner"></div>
-          <p>Scouting Himalayan expeditions...</p>
+          <p>Loading trips in Nepal...</p>
         </div>
       ) : trips.length === 0 ? (
         <div className="explore-empty-state-card">
           <div className="empty-state-icon">🏔️</div>
-          <h3>No Expeditions Match Your Criteria</h3>
+          <h3>No Trips Found</h3>
           <p>
-            We couldn't find any trips for this search. Try resetting your search filters or be the first to host this journey!
+            We couldn't find any trips matching your search. Try resetting your search filters or create a new trip!
           </p>
           <div className="empty-state-btn-row">
             <button className="btn-secondary" onClick={handleClearFilters}>
-              Reset All Filters
+              Reset Filters
             </button>
             <button className="btn-create-expedition" onClick={() => setIsCreateOpen(true)}>
-              + Host This Trip
+              + Create a Trip
             </button>
           </div>
         </div>

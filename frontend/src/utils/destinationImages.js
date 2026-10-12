@@ -2,6 +2,9 @@ import destPokhara from '../assets/dest-pokhara.jpg';
 import destAnnapurna from '../assets/dest-annapurna.jpg';
 import destEverest from '../assets/dest-everest.jpg';
 import destMustang from '../assets/dest-mustang.jpg';
+import destChitwan from '../assets/dest-chitwan.jpg';
+import destBandipur from '../assets/dest-bandipur.jpg';
+import destKathmandu from '../assets/dest-kathmandu.jpg';
 import heroBg from '../assets/hero-bg.jpg';
 
 export function getDestinationImage(destinationName = '', title = '') {
@@ -15,12 +18,39 @@ export function getDestinationImage(destinationName = '', title = '') {
     return destPokhara;
   }
   if (
+    q.includes('chitwan') ||
+    q.includes('sauraha') ||
+    q.includes('safari') ||
+    q.includes('rapti')
+  ) {
+    return destChitwan;
+  }
+  if (
+    q.includes('bandipur') ||
+    q.includes('tanahun') ||
+    q.includes('dumre')
+  ) {
+    return destBandipur;
+  }
+  if (
+    q.includes('kathmandu') ||
+    q.includes('ktm') ||
+    q.includes('patan') ||
+    q.includes('bhaktapur') ||
+    q.includes('durbar') ||
+    q.includes('thamel') ||
+    q.includes('boudha')
+  ) {
+    return destKathmandu;
+  }
+  if (
     q.includes('annapurna') ||
     q.includes('abc') ||
     q.includes('thorong') ||
     q.includes('mardi') ||
     q.includes('poon hill') ||
-    q.includes('ghorepani')
+    q.includes('ghorepani') ||
+    q.includes('langtang')
   ) {
     return destAnnapurna;
   }
@@ -65,12 +95,19 @@ export function getDifficulty(trip) {
     if (d.includes('chal')) return { label: 'Challenging', icon: '🧗', className: 'diff-challenging' };
     if (d.includes('stren') || d.includes('hard')) return { label: 'Strenuous', icon: '⛰️', className: 'diff-strenuous' };
   }
+  const style = (trip.travel_style || '').toLowerCase();
+  if (style === 'cultural' || style === 'relaxation') {
+    return { label: 'Easy / Leisure', icon: '🚶', className: 'diff-easy' };
+  }
   const dest = `${trip.destination_name || ''} ${trip.title || ''}`.toLowerCase();
-  if (dest.includes('everest') || dest.includes('thorong') || dest.includes('manaslu')) {
+  if (dest.includes('everest') || dest.includes('ebc') || dest.includes('thorong') || dest.includes('manaslu')) {
     return { label: 'Challenging', icon: '🧗', className: 'diff-challenging' };
   }
   if (dest.includes('annapurna') || dest.includes('mustang') || dest.includes('langtang')) {
     return { label: 'Moderate', icon: '🏔️', className: 'diff-moderate' };
   }
-  return { label: 'Moderate', icon: '🏔️', className: 'diff-moderate' };
+  if (dest.includes('kathmandu') || dest.includes('chitwan') || dest.includes('bandipur') || dest.includes('lumbini') || dest.includes('pokhara')) {
+    return { label: 'Easy', icon: '🚶', className: 'diff-easy' };
+  }
+  return { label: 'Easy', icon: '🚶', className: 'diff-easy' };
 }

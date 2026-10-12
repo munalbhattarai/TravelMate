@@ -88,7 +88,7 @@ export default function TripCard({ trip, onSelect }) {
         
         <p className="trip-destination">
           <span className="dest-pin-icon">📍</span>
-          <span>{trip.destination_name || 'Nepal Himalayan Circuit'}</span>
+          <span>{trip.destination_name || 'Nepal'}</span>
         </p>
 
         {/* Host Info Capsule */}
@@ -98,7 +98,7 @@ export default function TripCard({ trip, onSelect }) {
           </span>
           <div className="trip-host-meta">
             <span className="trip-host-name">@{creatorName}</span>
-            <span className="trip-host-badge">✓ Verified Host</span>
+            <span className="trip-host-badge">✓ Host</span>
           </div>
         </div>
 
@@ -109,7 +109,7 @@ export default function TripCard({ trip, onSelect }) {
               👥 {currentMembers} of {maxMembers} joined
             </span>
             <span className={`roster-urgency-tag ${spotsLeft === 1 ? 'urgent' : spotsLeft === 0 ? 'full' : ''}`}>
-              {spotsLeft === 0 ? 'Team Full' : spotsLeft === 1 ? '🔥 Only 1 spot left!' : `${spotsLeft} spots left`}
+              {spotsLeft === 0 ? 'Group Full' : spotsLeft === 1 ? '🔥 Only 1 spot left!' : `${spotsLeft} spots left`}
             </span>
           </div>
           <div className="roster-progress-track">
@@ -143,7 +143,7 @@ export default function TripCard({ trip, onSelect }) {
             if (onSelect) onSelect(trip.id);
           }}
         >
-          View Trip & Workspace →
+          View Trip Details →
         </button>
       </div>
     </div>
