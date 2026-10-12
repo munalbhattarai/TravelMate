@@ -4953,3 +4953,126 @@
   background: #fdfaf6;
   border-top: 1px solid var(--border);
 }
+
+/* ============================================================
+   GLOBAL FLOATING TOAST NOTIFICATIONS
+   ============================================================ */
+.global-toast-container {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  pointer-events: none;
+}
+
+.global-toast-pill {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  background: #ffffff;
+  color: #0f172a;
+  padding: 0.85rem 1.25rem;
+  border-radius: 14px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e2e8f0;
+  border-left: 5px solid #10b981;
+  animation: slideToastIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 420px;
+}
+
+.global-toast-pill.toast-success {
+  border-left-color: #10b981;
+}
+
+.toast-icon-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #15803d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.toast-body-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.toast-title {
+  font-weight: 750;
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+
+.toast-desc {
+  font-size: 0.82rem;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.toast-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.2rem;
+  line-height: 1;
+  transition: color 0.15s ease;
+}
+
+.toast-close-btn:hover {
+  color: #334155;
+}
+
+@keyframes slideToastIn {
+  from {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Auth Card In-Form Logout Banner */
+.auth-logout-success-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
+  color: #166534;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  animation: fadeIn 0.25s ease;
+}
+
+.logout-success-icon {
+  font-weight: 800;
+  font-size: 1rem;
+  color: #15803d;
+  background: #dcfce7;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}

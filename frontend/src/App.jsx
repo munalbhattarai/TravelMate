@@ -14,6 +14,7 @@ import './App.css';
 export default function App() {
   const [route, setRoute] = useState('home');
   const [selectedTripId, setSelectedTripId] = useState(null);
+  const [toast, setToast] = useState(null);
 
   const handleSelectTrip = (id) => {
     setSelectedTripId(id);
@@ -23,13 +24,46 @@ export default function App() {
   React.useEffect(() => {
     const handleLogout = () => {
       setRoute('login');
+      setSelectedTripId(null);
+      setToast({
+        title: 'Logged Out Successfully',
+        message: 'You have been safely signed out. See you on the trails! 👋',
+        type: 'success',
+      });
     };
     window.addEventListener('auth:logout', handleLogout);
     return () => window.removeEventListener('auth:logout', handleLogout);
   }, []);
 
+  React.useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => {
+      setToast(null);
+    }, 4500);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
   return (
     <AuthProvider>
+      {toast && (
+        <div className="global-toast-container" role="alert">
+          <div className={`global-toast-pill toast-${toast.type || 'success'}`}>
+            <div className="toast-icon-badge">✓</div>
+            <div className="toast-body-text">
+              <span className="toast-title">{toast.title}</span>
+              <span className="toast-desc">{toast.message}</span>
+            </div>
+            <button
+              className="toast-close-btn"
+              onClick={() => setToast(null)}
+              aria-label="Close notification"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       <Layout 
         currentRoute={route} 
         onNavigate={(r, tripId = null) => { 
@@ -45,7 +79,9 @@ export default function App() {
         {route === 'home' && <Home onNavigate={setRoute} />}
         {route === 'explore' && <ExploreTrips onSelectTrip={handleSelectTrip} />}
         {route === 'matches' && <MatchesPage />}
-        {route === 'profile' && <ProfilePage onNavigateTrip={handleSelectTrip} />}
+        {route === 'profile' && (
+          <ProfilePage onNavigateTrip={handleSelectTrip} onNavigate={setRoute} />
+        )}
         {route === 'admin' && (
           <AdminDashboard onNavigate={setRoute} onSelectTrip={handleSelectTrip} />
         )}
@@ -54,7 +90,11 @@ export default function App() {
         )}
         {route === 'login' && (
           <div className="auth-page-wrap">
-            <LoginForm onSuccess={() => setRoute('explore')} onSwitchToRegister={() => setRoute('register')} />
+            <LoginForm 
+              onSuccess={() => setRoute('explore')} 
+              onSwitchToRegister={() => setRoute('register')}
+              logoutNotice={Boolean(toast)}
+            />
           </div>
         )}
         {route === 'register' && (

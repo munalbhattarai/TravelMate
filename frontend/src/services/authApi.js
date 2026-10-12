@@ -32,5 +32,6 @@ export const authApi = {
 
   logout() {
     clearTokens();
+    window.dispatchEvent(new CustomEvent('auth:logout'));
   }
 };

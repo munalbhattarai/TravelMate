@@ -44,8 +44,8 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
-    authApi.logout();
     setUser(null);
+    authApi.logout();
   };
 
   return (

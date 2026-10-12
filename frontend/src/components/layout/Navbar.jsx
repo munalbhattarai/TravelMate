@@ -155,7 +155,13 @@ export default function Navbar({ currentRoute, onNavigate }) {
                 )}
               </div>
 
-              <button className="nav-logout-btn" onClick={logout}>
+              <button 
+                className="nav-logout-btn" 
+                onClick={() => {
+                  logout();
+                  if (onNavigate) onNavigate('login');
+                }}
+              >
                 Logout
               </button>
             </div>

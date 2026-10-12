@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import authBg from '../../assets/auth-bg.jpg';
 
-export default function LoginForm({ onSuccess, onSwitchToRegister }) {
+export default function LoginForm({ onSuccess, onSwitchToRegister, logoutNotice }) {
   const { login } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -33,6 +33,13 @@ export default function LoginForm({ onSuccess, onSwitchToRegister }) {
             <h2 className="auth-paper-title">SIGN IN</h2>
             <p className="auth-paper-subtitle">Welcome back to TravelMate</p>
           </div>
+
+          {logoutNotice && (
+            <div className="auth-logout-success-banner">
+              <span className="logout-success-icon">✓</span>
+              <span>You have been safely logged out. Safe travels!</span>
+            </div>
+          )}
 
           {error && <div className="auth-error-alert">{error}</div>}
 

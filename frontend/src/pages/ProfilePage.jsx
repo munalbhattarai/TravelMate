@@ -59,13 +59,20 @@ const ACCOMMODATION_OPTIONS = [
 
 const LANGUAGE_OPTIONS = ['Nepali', 'English', 'Hindi', 'Newari', 'Tibetan'];
 
-export default function ProfilePage({ onNavigateTrip }) {
+export default function ProfilePage({ onNavigateTrip, onNavigate }) {
   const { user, setUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [reviews, setReviews] = useState([]);
+
+  // Immediately redirect or clear if user logged out
+  useEffect(() => {
+    if (!user && onNavigate) {
+      onNavigate('login');
+    }
+  }, [user, onNavigate]);
 
   // Form State
   const [profileData, setProfileData] = useState({
@@ -87,6 +94,7 @@ export default function ProfilePage({ onNavigateTrip }) {
   });
 
   useEffect(() => {
+    if (!user) return;
     async function fetchFullProfile() {
       try {
         const data = await authApi.getProfile();
@@ -166,6 +174,27 @@ export default function ProfilePage({ onNavigateTrip }) {
       setSaving(false);
     }
   };
+
+  if (!user) {
+    return (
+      <div className="profile-page-container" style={{ textAlign: 'center', padding: '5rem 1rem' }}>
+        <div style={{ maxWidth: '420px', margin: '0 auto', background: '#ffffff', padding: '2.5rem', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 8px 24px rgba(0,0,0,0.04)' }}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔒</div>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0f172a', margin: '0 0 0.5rem 0' }}>Sign In Required</h2>
+          <p style={{ color: '#64748b', fontSize: '0.9rem', margin: '0 0 1.5rem 0', lineHeight: 1.5 }}>
+            You need to be signed in to view and edit your traveler profile dossier.
+          </p>
+          <button
+            className="btn-paper-cyan"
+            onClick={() => onNavigate && onNavigate('login')}
+            style={{ width: '100%', padding: '0.75rem' }}
+          >
+            SIGN IN TO TRAVELMATE
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
