@@ -3,6 +3,7 @@ import { useAuth } from '../../hooks/useAuth';
 import NotificationCenter from '../notifications/NotificationCenter';
 import SafetyCenterModal from '../moderation/SafetyCenterModal';
 import ReportModal from '../moderation/ReportModal';
+import TravelMateLogo from '../ui/TravelMateLogo';
 import { notificationApi } from '../../services/notificationApi';
 
 export default function Navbar({ currentRoute, onNavigate }) {
@@ -53,8 +54,7 @@ export default function Navbar({ currentRoute, onNavigate }) {
     <header className="top-site-navbar">
       <div className="top-site-navbar-container">
         <div className="nav-brand" onClick={() => onNavigate('home')}>
-          <span className="brand-icon">🧭</span>
-          <span className="brand-title">TravelMate</span>
+          <TravelMateLogo size="md" />
         </div>
 
         <nav className="nav-menu">

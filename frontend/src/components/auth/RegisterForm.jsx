@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import authBg from '../../assets/auth-bg.jpg';
 import CustomSelect from '../ui/CustomSelect';
+import TravelMateLogo from '../ui/TravelMateLogo';
 
 const STYLE_OPTIONS = [
   { value: 'adventure', label: 'Adventure' },
@@ -61,6 +62,9 @@ export default function RegisterForm({ onSuccess, onSwitchToLogin }) {
         {/* Left: Clean Form Side */}
         <div className="auth-paper-form">
           <div className="auth-paper-header">
+            <div style={{ marginBottom: '0.85rem' }}>
+              <TravelMateLogo size="sm" />
+            </div>
             <h2 className="auth-paper-title">SIGN UP</h2>
             <p className="auth-paper-subtitle">Find your ideal travel partners</p>
           </div>
