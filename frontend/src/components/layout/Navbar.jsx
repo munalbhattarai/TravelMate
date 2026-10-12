@@ -82,8 +82,7 @@ export default function Navbar({ currentRoute, onNavigate }) {
             <button
               className={`nav-item nav-admin-nav-item ${currentRoute === 'admin' ? 'active' : ''}`}
               onClick={() => onNavigate('admin')}
-              title="TravelMate Central Administration Console"
-              style={{ fontWeight: 650, color: currentRoute === 'admin' ? '#4338ca' : '#6366f1' }}
+              title="TravelMate Administration Console"
             >
               🛡️ Admin Console
             </button>
@@ -143,12 +142,8 @@ export default function Navbar({ currentRoute, onNavigate }) {
                 {isAdmin && (
                   <span 
                     className="nav-role-badge" 
-                    title="System Administrator - Click for Admin Console" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onNavigate('admin');
-                    }}
-                    style={{ fontSize: '0.68rem', background: '#ede9fe', color: '#6d28d9', padding: '0.15rem 0.45rem', borderRadius: '10px', fontWeight: 700, marginLeft: '0.2rem', cursor: 'pointer' }}
+                    title="System Administrator" 
+                    style={{ fontSize: '0.68rem', background: '#ede9fe', color: '#6d28d9', padding: '0.15rem 0.45rem', borderRadius: '10px', fontWeight: 700, marginLeft: '0.2rem' }}
                   >
                     ⚙️ Admin
                   </span>

@@ -148,13 +148,12 @@ export default function AdminDashboard({ onNavigate, onSelectTrip }) {
       <div className="admin-header-masthead">
         <div className="admin-masthead-content">
           <div className="masthead-badge-row">
-            <span className="live-pulse-dot"></span>
-            <span className="masthead-badge">TRAVELMATE CENTRAL OPERATIONAL HUB</span>
-            <span className="admin-user-tag">Officer: @{user?.username}</span>
+            <span className="masthead-badge">ADMIN CONSOLE</span>
+            <span className="admin-user-tag">@{user?.username}</span>
           </div>
-          <h1 className="admin-masthead-title">Administrative Operations Deck</h1>
+          <h1 className="admin-masthead-title">Platform Administration</h1>
           <p className="admin-masthead-desc">
-            Unified telemetry, companion safety incident triage, guide license verification, and expedition governance.
+            Manage community users, verify Himalayan trekking guides, triage safety incident reports, and oversee expeditions.
           </p>
         </div>
 
