@@ -1,43 +1,68 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import heroBg from '../assets/hero-bg.jpg';
-import destPokhara from '../assets/dest-pokhara.jpg';
-import destAnnapurna from '../assets/dest-annapurna.jpg';
-import destEverest from '../assets/dest-everest.jpg';
-import destMustang from '../assets/dest-mustang.jpg';
+import { tripApi } from '../services/tripApi';
+import { getDestinationImage } from '../utils/destinationImages';
 
-const NEPAL_DESTINATIONS = [
+// Fallback initial trips matching actual database records so UI renders instantly
+const FALLBACK_HERO_TRIPS = [
   {
     id: 1,
-    name: 'Pokhara Lakeside',
-    location: 'Gandaki Province, Nepal',
-    image: destPokhara,
-    tag: 'Lakeside & Adventure'
+    title: 'Pokhara Adventure & Lakeside Vibes',
+    destination_name: 'Pokhara (Phewa Lake & Sarangkot)',
+    budget: '10000',
+  },
+  {
+    id: 6,
+    title: 'Annapurna Sanctuary & ABC Trek',
+    destination_name: 'Annapurna Base Camp',
+    budget: '26000',
   },
   {
     id: 2,
-    name: 'Annapurna Base Camp',
-    location: 'Sanctuary Trek, Nepal',
-    image: destAnnapurna,
-    tag: 'Himalayan Trekking'
-  },
-  {
-    id: 3,
-    name: 'Everest Region',
-    location: 'Namche Bazaar, Khumbu',
-    image: destEverest,
-    tag: 'High Altitude Trek'
+    title: 'Kathmandu Heritage & Cultural Walk',
+    destination_name: 'Kathmandu Valley',
+    budget: '9500',
   },
   {
     id: 4,
-    name: 'Upper Mustang',
-    location: 'Lo Manthang, Nepal',
-    image: destMustang,
-    tag: 'Heritage & Desert Valleys'
-  }
+    title: 'Chitwan Safari & Wilderness Weekend',
+    destination_name: 'Chitwan National Park',
+    budget: '14500',
+  },
 ];
 
-export default function Home({ onNavigate }) {
+export default function Home({ onNavigate, onSelectTrip }) {
+  const [featuredTrips, setFeaturedTrips] = useState(FALLBACK_HERO_TRIPS);
   const [activeDestIndex, setActiveDestIndex] = useState(0);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadFeaturedTrips = async () => {
+      try {
+        const res = await tripApi.getTrips();
+        const list = res.results || res;
+        if (isMounted && Array.isArray(list) && list.length > 0) {
+          // Take top 4 active trips from backend for the hero circular showcase
+          setFeaturedTrips(list.slice(0, 4));
+        }
+      } catch (err) {
+        console.warn('Using fallback trips for hero showcase:', err);
+      }
+    };
+    loadFeaturedTrips();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleTripClick = (trip, idx) => {
+    setActiveDestIndex(idx);
+    if (onSelectTrip && trip?.id) {
+      onSelectTrip(trip.id);
+    } else if (onNavigate) {
+      onNavigate('explore');
+    }
+  };
 
   return (
     <div className="home-container">
@@ -82,37 +107,47 @@ export default function Home({ onNavigate }) {
             </div>
           </div>
 
-          {/* Right Column: Circular Nepal Destinations Preview (Image 2 style) */}
+          {/* Right Column: Circular Nepal Real Trips Preview */}
           <div className="hero-destinations-stack">
             <div className="destinations-circles-list">
-              {NEPAL_DESTINATIONS.map((dest, idx) => (
-                <div 
-                  key={dest.id}
-                  className={`dest-circle-item ${idx === activeDestIndex ? 'active' : ''}`}
-                  onClick={() => {
-                    setActiveDestIndex(idx);
-                    onNavigate('explore');
-                  }}
-                  onMouseEnter={() => setActiveDestIndex(idx)}
-                >
-                  <div className="dest-text-caption">
-                    <span className="dest-name-label">{dest.name}</span>
-                    <span className="dest-loc-sub">{dest.location}</span>
+              {featuredTrips.map((trip, idx) => {
+                const tripCover = getDestinationImage(trip.destination_name, trip.title);
+                const locationLabel = trip.destination_name 
+                  ? trip.destination_name.split('(')[0].trim() 
+                  : (trip.location || 'Nepal');
+
+                return (
+                  <div 
+                    key={trip.id || idx}
+                    className={`dest-circle-item ${idx === activeDestIndex ? 'active' : ''}`}
+                    onClick={() => handleTripClick(trip, idx)}
+                    onMouseEnter={() => setActiveDestIndex(idx)}
+                    role="button"
+                    tabIndex={0}
+                    title={`Click to view details for ${trip.title}`}
+                  >
+                    <div className="dest-text-caption">
+                      <span className="dest-name-label">{trip.title}</span>
+                      <span className="dest-loc-sub">
+                        {trip.budget ? `₨${Number(trip.budget).toLocaleString()} • ` : ''}{locationLabel}
+                      </span>
+                    </div>
+                    <div className="dest-circle-frame">
+                      <img src={tripCover} alt={trip.title} />
+                    </div>
                   </div>
-                  <div className="dest-circle-frame">
-                    <img src={dest.image} alt={dest.name} />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Vertical Pagination Dots */}
             <div className="vertical-pagination-indicator" aria-hidden="true">
-              {NEPAL_DESTINATIONS.map((_, idx) => (
+              {featuredTrips.map((_, idx) => (
                 <span 
                   key={idx} 
                   className={`v-dot ${idx === activeDestIndex ? 'active' : ''}`}
                   onClick={() => setActiveDestIndex(idx)}
+                  title={`Trip ${idx + 1}`}
                 />
               ))}
             </div>

@@ -19,6 +19,7 @@ from .services import (
 from rest_framework.views import APIView
 from .serializers import TripMembershipSerializer, TripSerializer, ItinerarySerializer
 from common.permissions import IsTripCreator, IsTripMember, IsOwnerOrReadOnly
+from django.core.cache import cache
 from .models import Trip, Itinerary, TripMembership
 
 
@@ -27,6 +28,27 @@ class TripViewSet(viewsets.ModelViewSet):
     queryset = Trip.objects.all()
     serializer_class = TripSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+        cache_key = f"trip_list_{request.get_full_path()}"
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            return Response(cached_data)
+        response = super().list(request, *args, **kwargs)
+        if response.status_code == 200:
+            cache.set(cache_key, response.data, 90)
+        return response
+
+    def retrieve(self, request, *args, **kwargs):
+        trip_id = kwargs.get("pk")
+        cache_key = f"trip_detail_{trip_id}"
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            return Response(cached_data)
+        response = super().retrieve(request, *args, **kwargs)
+        if response.status_code == 200:
+            cache.set(cache_key, response.data, 90)
+        return response
 
     def get_permissions(self):
         if self.action in ["list", "retrieve", "memberships"]:
@@ -91,6 +113,7 @@ class TripViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
+        cache.clear()
         trip = serializer.save(creator=self.request.user)
         TripMembership.objects.get_or_create(
             trip=trip,
@@ -101,11 +124,20 @@ class TripViewSet(viewsets.ModelViewSet):
             },
         )
 
+    def perform_update(self, serializer):
+        cache.clear()
+        super().perform_update(serializer)
+
+    def perform_destroy(self, instance):
+        cache.clear()
+        super().perform_destroy(instance)
+
     @action(detail=True, methods=["post"], url_path="join")
     def join(self, request, pk=None):
         trip = self.get_object()
         try:
             membership = request_to_join(trip=trip, user=request.user)
+            cache.clear()
         except ValueError as exc:
             return Response(
                 {"detail": str(exc)},
@@ -151,6 +183,7 @@ class TripViewSet(viewsets.ModelViewSet):
         membership = get_object_or_404(TripMembership, pk=membership_id, trip_id=pk)
         try:
             membership = accept_membership(membership=membership, accepted_by=request.user)
+            cache.clear()
         except ValueError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(TripMembershipSerializer(membership).data, status=status.HTTP_200_OK)
@@ -160,6 +193,7 @@ class TripViewSet(viewsets.ModelViewSet):
         membership = get_object_or_404(TripMembership, pk=membership_id, trip_id=pk)
         try:
             membership = reject_membership(membership=membership, rejected_by=request.user)
+            cache.clear()
         except ValueError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(TripMembershipSerializer(membership).data, status=status.HTTP_200_OK)
@@ -186,6 +220,7 @@ class TripViewSet(viewsets.ModelViewSet):
         trip = self.get_object()
         try:
             leave_trip(trip=trip, user=request.user)
+            cache.clear()
         except ValueError as exc:
             return Response(
                 {"detail": str(exc)},
@@ -210,6 +245,7 @@ class TripViewSet(viewsets.ModelViewSet):
                 {"detail": "Only open or full trips can be started."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        cache.clear()
         trip.status = Trip.Status.ONGOING
         trip.save(update_fields=["status", "updated_at"])
         return Response(TripSerializer(trip).data, status=status.HTTP_200_OK)
@@ -227,6 +263,7 @@ class TripViewSet(viewsets.ModelViewSet):
                 {"detail": "Only ongoing trips can be completed."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        cache.clear()
         trip.status = Trip.Status.COMPLETED
         trip.save(update_fields=["status", "updated_at"])
         return Response(TripSerializer(trip).data, status=status.HTTP_200_OK)
@@ -244,6 +281,7 @@ class TripViewSet(viewsets.ModelViewSet):
                 {"detail": "Cannot cancel a completed or already cancelled trip."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        cache.clear()
         trip.status = Trip.Status.CANCELLED
         trip.save(update_fields=["status", "updated_at"])
         return Response(TripSerializer(trip).data, status=status.HTTP_200_OK)
@@ -253,26 +291,47 @@ class TripViewSet(viewsets.ModelViewSet):
 class ItineraryViewSet(viewsets.ModelViewSet):
     serializer_class = ItinerarySerializer
     permission_classes = [permissions.AllowAny]
+    ordering = ["day_number"]
+
+    def list(self, request, *args, **kwargs):
+        cache_key = f"itin_list_{self.kwargs.get('trip_pk')}"
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            return Response(cached_data)
+        response = super().list(request, *args, **kwargs)
+        if response.status_code == 200:
+            cache.set(cache_key, response.data, 90)
+        return response
+
     def get_permissions(self):
         if self.action in ["create", "update", "partial_update", "destroy", "reorder"]:
             return [permissions.IsAuthenticated(), IsTripMember()]
         return [permissions.AllowAny()]
 
-    ordering = ["day_number"]
-
     def get_queryset(self):
         return Itinerary.objects.filter(
             trip_id=self.kwargs["trip_pk"]
-        )
+        ).prefetch_related("items")
 
     def perform_create(self, serializer):
+        cache.clear()
         serializer.save(trip_id=self.kwargs["trip_pk"])
+
+    def perform_update(self, serializer):
+        cache.clear()
+        super().perform_update(serializer)
+
+    def perform_destroy(self, instance):
+        cache.clear()
+        super().perform_destroy(instance)
+
     @action(detail=True, methods=["post"])
     def reorder(self, request, pk=None, trip_pk=None):
         from .services import reorder_itinerary_items
         itinerary = self.get_object()
         item_orders = request.data.get("items", [])
         reorder_itinerary_items(itinerary=itinerary, item_orders=item_orders)
+        cache.clear()
         return Response({"status": "items reordered successfully"})
 
         

@@ -24,7 +24,9 @@ export default function ExploreTrips({ onSelectTrip }) {
   const [filters, setFilters] = useState({ query: '', travel_style: '', status: 'open' });
 
   const loadTrips = useCallback(async (customFilters = filters) => {
-    setLoading(true);
+    if (trips.length === 0) {
+      setLoading(true);
+    }
     try {
       const res = await tripApi.getTrips(customFilters);
       setTrips(res.results || res || []);
@@ -33,7 +35,7 @@ export default function ExploreTrips({ onSelectTrip }) {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, trips.length]);
 
   useEffect(() => {
     loadTrips();

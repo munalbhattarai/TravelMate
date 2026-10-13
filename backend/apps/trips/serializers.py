@@ -12,6 +12,9 @@ class TripSerializer(serializers.ModelSerializer):
     current_members = serializers.SerializerMethodField()
 
     def get_current_members(self, obj):
+        # Use prefetched objects cache to eliminate N+1 queries over network
+        if hasattr(obj, '_prefetched_objects_cache') and 'memberships' in obj._prefetched_objects_cache:
+            return sum(1 for m in obj.memberships.all() if getattr(m, 'status', None) == 'accepted')
         return obj.memberships.filter(status='accepted').count()
 
     class Meta:

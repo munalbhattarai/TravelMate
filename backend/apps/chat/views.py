@@ -24,7 +24,7 @@ class TripMessageView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, trip_id):
-        trip = get_object_or_404(Trip, pk=trip_id)
+        trip = get_object_or_404(Trip.objects.only("id", "creator_id"), pk=trip_id)
         if not verify_chat_membership(trip=trip, user=request.user):
             return Response(
                 {"detail": "Only trip members can view chat messages."},
@@ -44,7 +44,7 @@ class TripMessageView(APIView):
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, trip_id):
-        trip = get_object_or_404(Trip, pk=trip_id)
+        trip = get_object_or_404(Trip.objects.only("id", "creator_id", "title", "status"), pk=trip_id)
         content = request.data.get("content")
         try:
             message = send_trip_message(

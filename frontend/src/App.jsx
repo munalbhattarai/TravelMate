@@ -14,9 +14,11 @@ import './App.css';
 export default function App() {
   const [route, setRoute] = useState('home');
   const [selectedTripId, setSelectedTripId] = useState(null);
+  const [previousRoute, setPreviousRoute] = useState('home');
   const [toast, setToast] = useState(null);
 
   const handleSelectTrip = (id) => {
+    setPreviousRoute(route);
     setSelectedTripId(id);
     setRoute('trip-detail');
   };
@@ -76,7 +78,7 @@ export default function App() {
           }
         }}
       >
-        {route === 'home' && <Home onNavigate={setRoute} />}
+        {route === 'home' && <Home onNavigate={setRoute} onSelectTrip={handleSelectTrip} />}
         {route === 'explore' && <ExploreTrips onSelectTrip={handleSelectTrip} />}
         {route === 'matches' && <MatchesPage />}
         {route === 'profile' && (
@@ -86,7 +88,7 @@ export default function App() {
           <AdminDashboard onNavigate={setRoute} onSelectTrip={handleSelectTrip} />
         )}
         {route === 'trip-detail' && selectedTripId && (
-          <TripDetailPage tripId={selectedTripId} onBack={() => setRoute('explore')} onNavigate={setRoute} />
+          <TripDetailPage tripId={selectedTripId} onBack={() => setRoute(previousRoute || 'home')} onNavigate={setRoute} />
         )}
         {route === 'login' && (
           <div className="auth-page-wrap">

@@ -939,7 +939,7 @@
   gap: 1.25rem;
   cursor: pointer;
   transition: all var(--transition-normal);
-  padding: 0.4rem;
+  padding: 0.4rem 0.6rem;
   border-radius: var(--radius-pill);
 }
 
@@ -947,23 +947,27 @@
   text-align: right;
   display: flex;
   flex-direction: column;
+  max-width: 290px;
   transition: transform var(--transition-fast);
 }
 
 .dest-name-label {
   font-family: var(--font-display);
-  font-size: 1.1rem;
+  font-size: 1.08rem;
   font-style: italic;
-  font-weight: 600;
+  font-weight: 700;
   color: #ffffff;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+  line-height: 1.25;
+  transition: color var(--transition-fast);
 }
 
 .dest-loc-sub {
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.75);
-  font-weight: 500;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.88);
+  font-weight: 600;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+  margin-top: 0.15rem;
 }
 
 .dest-circle-frame {
@@ -4686,6 +4690,30 @@
   margin-top: 0.35rem;
   text-align: right;
   opacity: 0.7;
+}
+
+.chat-message-row.optimistic-sending .chat-bubble-card {
+  opacity: 0.85;
+}
+
+.chat-sending-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  font-style: italic;
+  opacity: 0.85;
+}
+
+.sending-dot-pulse {
+  font-size: 0.6rem;
+  color: #38bdf8;
+  animation: pulseSendingDot 1s infinite alternate;
+}
+
+@keyframes pulseSendingDot {
+  0% { opacity: 0.3; transform: scale(0.85); }
+  100% { opacity: 1; transform: scale(1.15); }
 }
 
 .messenger-input-tray {

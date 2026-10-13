@@ -37,16 +37,19 @@ def send_trip_message(*, trip, sender, content):
     )
 
     try:
-        from apps.notifications.services import notify
-        recipients = set()
+        from apps.notifications.services import bulk_notify
+        recipient_ids = set()
         if trip.creator_id != sender.id:
-            recipients.add(trip.creator)
-        for mem in TripMembership.objects.filter(trip=trip, status=TripMembership.Status.ACCEPTED).select_related("user"):
-            if mem.user_id != sender.id:
-                recipients.add(mem.user)
-        for r in recipients:
-            notify(
-                user=r,
+            recipient_ids.add(trip.creator_id)
+        member_ids = (
+            TripMembership.objects.filter(trip_id=trip.id, status=TripMembership.Status.ACCEPTED)
+            .exclude(user_id=sender.id)
+            .values_list("user_id", flat=True)
+        )
+        recipient_ids.update(member_ids)
+        if recipient_ids:
+            bulk_notify(
+                recipient_ids,
                 type="new_message",
                 payload={
                     "trip_id": trip.id,

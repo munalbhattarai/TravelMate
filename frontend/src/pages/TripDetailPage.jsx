@@ -11,12 +11,13 @@ import TripPackingList from '../components/trip/TripPackingList';
 
 export default function TripDetailPage({ tripId, onBack, onNavigate }) {
   const { user } = useAuth();
-  const [trip, setTrip] = useState(null);
+  const cachedInitialTrip = tripApi.getCachedTrip(tripId);
+  const [trip, setTrip] = useState(cachedInitialTrip || null);
   const [itineraries, setItineraries] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [memberships, setMemberships] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!cachedInitialTrip);
   const [actionMsg, setActionMsg] = useState('');
   const [actionError, setActionError] = useState('');
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
@@ -26,14 +27,17 @@ export default function TripDetailPage({ tripId, onBack, onNavigate }) {
 
   const loadData = async () => {
     try {
-      const data = await tripApi.getTrip(tripId);
-      setTrip(data);
-
-      const [itinRes, memRes] = await Promise.allSettled([
+      // Parallelize all requests to eliminate the 3-step waterfall delay
+      const [tripRes, itinRes, memRes, expRes] = await Promise.allSettled([
+        tripApi.getTrip(tripId),
         tripApi.getItinerary(tripId),
         tripApi.getMemberships(tripId),
+        tripApi.getExpenses(tripId),
       ]);
 
+      if (tripRes.status === 'fulfilled' && tripRes.value) {
+        setTrip(tripRes.value);
+      }
       if (itinRes.status === 'fulfilled') {
         const val = itinRes.value?.results || itinRes.value;
         setItineraries(Array.isArray(val) ? val : []);
@@ -42,27 +46,9 @@ export default function TripDetailPage({ tripId, onBack, onNavigate }) {
         const val = memRes.value?.results || memRes.value;
         setMemberships(Array.isArray(val) ? val : []);
       }
-
-      // Only fetch expenses if user is an accepted member, host, or admin
-      const memberList = memRes.status === 'fulfilled' ? (memRes.value?.results || memRes.value || []) : [];
-      const userIsMember = Boolean(
-        user && (
-          user.username === data?.creator ||
-          (data?.creator_id && user.id === data?.creator_id) ||
-          user.role === 'admin' ||
-          user.is_staff ||
-          (Array.isArray(memberList) && memberList.some(m => (m.user === user.username || m.user_id === user.id) && m.status === 'accepted'))
-        )
-      );
-
-      if (userIsMember) {
-        try {
-          const expRes = await tripApi.getExpenses(tripId);
-          const val = expRes?.results || expRes;
-          setExpenses(Array.isArray(val) ? val : []);
-        } catch {
-          setExpenses([]);
-        }
+      if (expRes.status === 'fulfilled') {
+        const val = expRes.value?.results || expRes.value;
+        setExpenses(Array.isArray(val) ? val : []);
       } else {
         setExpenses([]);
       }

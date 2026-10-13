@@ -18,7 +18,7 @@ export default function Footer({ onNavigate }) {
             <TravelMateLogo size="md" />
           </div>
           <p className="footer-brand-desc">
-            Nepal’s dedicated companion platform for treks, road trips, and mountain expeditions. 
+            Nepal’s dedicated companion platform for treks, road trips, and mountain expeditions.
             Connecting compatible travelers with algorithmic matching, collaborative itineraries, and transparent NPR expense settlements.
           </p>
           <div className="footer-trust-chips">

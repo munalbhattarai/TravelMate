@@ -61,11 +61,33 @@ const LANGUAGE_OPTIONS = ['Nepali', 'English', 'Hindi', 'Newari', 'Tibetan'];
 
 export default function ProfilePage({ onNavigateTrip, onNavigate }) {
   const { user, setUser } = useAuth();
-  const [loading, setLoading] = useState(true);
+  const initialProf = user?.profile || {};
+  const initialPref = user?.travel_preference || {};
+
+  const [loading, setLoading] = useState(!user);
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [reviews, setReviews] = useState([]);
+
+  // Form State initialized instantly from cached user session
+  const [profileData, setProfileData] = useState({
+    display_name: initialProf.display_name || user?.username || '',
+    bio: initialProf.bio || '',
+    location: initialProf.location || 'Nepal',
+  });
+
+  const [preferences, setPreferences] = useState({
+    travel_styles: Array.isArray(initialPref.travel_styles) ? initialPref.travel_styles : [],
+    interests: Array.isArray(initialPref.interests) ? initialPref.interests : [],
+    preferred_transport: initialPref.preferred_transport || 'bus',
+    preferred_accommodation: initialPref.preferred_accommodation || 'hostel',
+    budget_min: initialPref.budget_min !== null && initialPref.budget_min !== undefined ? String(initialPref.budget_min) : '8000',
+    budget_max: initialPref.budget_max !== null && initialPref.budget_max !== undefined ? String(initialPref.budget_max) : '20000',
+    preferred_duration_days: initialPref.preferred_duration_days || 7,
+    preferred_destinations: Array.isArray(initialPref.preferred_destinations) ? initialPref.preferred_destinations : ['Pokhara'],
+    languages: Array.isArray(initialPref.languages) && initialPref.languages.length > 0 ? initialPref.languages : ['English', 'Nepali'],
+  });
 
   // Immediately redirect or clear if user logged out
   useEffect(() => {
@@ -74,31 +96,18 @@ export default function ProfilePage({ onNavigateTrip, onNavigate }) {
     }
   }, [user, onNavigate]);
 
-  // Form State
-  const [profileData, setProfileData] = useState({
-    display_name: '',
-    bio: '',
-    location: '',
-  });
-
-  const [preferences, setPreferences] = useState({
-    travel_styles: [],
-    interests: [],
-    preferred_transport: 'bus',
-    preferred_accommodation: 'hostel',
-    budget_min: '',
-    budget_max: '',
-    preferred_duration_days: 7,
-    preferred_destinations: [],
-    languages: ['English', 'Nepali'],
-  });
-
   useEffect(() => {
     if (!user) return;
-    async function fetchFullProfile() {
+    let isMounted = true;
+    async function syncProfile() {
       try {
-        const data = await authApi.getProfile();
-        if (data) {
+        const [profData, revRes] = await Promise.allSettled([
+          authApi.getProfile(),
+          user?.id ? reviewApi.getUserReviews(user.id) : Promise.resolve([]),
+        ]);
+
+        if (isMounted && profData.status === 'fulfilled' && profData.value) {
+          const data = profData.value;
           const prof = data.profile || {};
           const pref = data.travel_preference || {};
 
@@ -119,22 +128,23 @@ export default function ProfilePage({ onNavigateTrip, onNavigate }) {
             preferred_destinations: Array.isArray(pref.preferred_destinations) ? pref.preferred_destinations : ['Pokhara'],
             languages: Array.isArray(pref.languages) && pref.languages.length > 0 ? pref.languages : ['English', 'Nepali'],
           });
+        }
 
-          if (data.id) {
-            try {
-              const revRes = await reviewApi.getUserReviews(data.id);
-              setReviews(revRes.results || revRes || []);
-            } catch {}
-          }
+        if (isMounted && revRes.status === 'fulfilled') {
+          const val = revRes.value?.results || revRes.value;
+          setReviews(Array.isArray(val) ? val : []);
         }
       } catch (err) {
-        console.error(err);
+        console.warn('Silent sync profile error:', err);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     }
-    fetchFullProfile();
-  }, []);
+    syncProfile();
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
 
   const toggleArrayItem = (list, setList, item) => {
     if (list.includes(item)) {

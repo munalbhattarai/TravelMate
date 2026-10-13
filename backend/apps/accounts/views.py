@@ -29,9 +29,15 @@ class LogoutView(APIView):
             status=status.HTTP_205_RESET_CONTENT,
         )
 
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+
 class MeView(generics.RetrieveUpdateAPIView):
     serializer_class = MeSerializer
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
-        return self.request.user
+        user = User.objects.select_related("profile", "travel_prefrence").filter(pk=self.request.user.pk).first()
+        return user or self.request.user
